@@ -16,7 +16,7 @@ struct HomeView: View {
                 // Logo at Top
                 HStack {
                     Spacer()
-                    Image("logo")
+                    Image("image")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 80, height: 80)
