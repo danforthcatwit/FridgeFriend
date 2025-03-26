@@ -14,6 +14,7 @@ struct RegistrationView: View {
     @State private var password = ""
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var viewModel: AuthViewModel
+    
     var body: some View {
         VStack {
             VStack(spacing: 24) {

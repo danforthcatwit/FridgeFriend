@@ -24,7 +24,7 @@ struct InputView: View {
                     .font(.system(size:14))
             }
             else {
-                SecureField(placeholder, text: $text)
+                TextField(placeholder, text: $text)
                     .font(.system(size:14))
             }
             

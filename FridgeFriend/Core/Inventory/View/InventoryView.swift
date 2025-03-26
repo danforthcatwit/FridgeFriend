@@ -1,20 +1,15 @@
-//
-//  InventoryView.swift
-//  FridgeFriend
-//
-//  Created by Colin James on 2/27/25.
-//
-
 import SwiftUI
 
 struct InventoryView: View {
     @StateObject var viewModel = InventoryViewModel()
+    @State private var itemToEdit: InventoryItem? = nil
+    @State private var isPressed: Bool = false
     
     var body: some View {
         NavigationView {
             ZStack(alignment: .top) {
                 VStack(spacing: 0) {
-                    // Conditionally show the add form at the top
+                    // Conditionally show the add/edit form at the top
                     if viewModel.showingAddForm {
                         InventoryItemInputView(viewModel: viewModel)
                             .transition(.move(edge: .top).combined(with: .opacity))
@@ -44,26 +39,36 @@ struct InventoryView: View {
                     } else {
                         List {
                             ForEach(viewModel.inventoryItems) { item in
-                                InventoryItemView(
-                                    itemName: item.name,
-                                    quantity: item.quantity,
-                                    expirationDate: item.expirationDate
-                                )
-                                .listRowSeparator(.hidden)
-                                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                                .contextMenu {
-                                    Button(action: {
-                                        // Edit functionality would go here
-                                    }) {
-                                        Label("Edit", systemImage: "pencil")
+                                VStack {
+                                    InventoryItemView(
+                                        itemName: item.name,
+                                        quantity: item.quantity,
+                                        expirationDate: item.expirationDate
+                                    )
+                                    .listRowSeparator(.hidden)
+                                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                                    .contextMenu {
+                                        Button(action: {
+                                            startEditing(item)
+                                        }) {
+                                            Label("Edit", systemImage: "pencil")
+                                        }
+                                        
+                                        Button(role: .destructive, action: {
+                                            deleteItem(item)
+                                        }) {
+                                            Label("Delete", systemImage: "trash.fill")
+                                        }
+                                    }
+                                    .background(Color.clear)
+                                    .onTapGesture {
+                                        startEditing(item)
                                     }
                                     
-                                    Button(role: .destructive, action: {
-                                        if let index = viewModel.inventoryItems.firstIndex(where: { $0.id == item.id }) {
-                                            viewModel.deleteItem(at: IndexSet(integer: index))
-                                        }
-                                    }) {
-                                        Label("Delete", systemImage: "trash")
+                                    // Conditionally show update view for the current item
+                                    if itemToEdit?.id == item.id {
+                                        InventoryUpdateView(viewModel: viewModel, itemToEdit: item)
+                                            .transition(.move(edge: .bottom).combined(with: .opacity))
                                     }
                                 }
                             }
@@ -81,13 +86,22 @@ struct InventoryView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
                         withAnimation {
-                            viewModel.showingAddForm.toggle()
+                            if itemToEdit != nil {
+                                itemToEdit = nil
+                                viewModel.showingEditForm = false
+                            } else {
+                                viewModel.showingAddForm.toggle()
+                            }
                         }
                     }) {
-                        Label(
-                            viewModel.showingAddForm ? "Hide Form" : "Add Item",
-                            systemImage: viewModel.showingAddForm ? "minus" : "plus"
-                        )
+                        if itemToEdit != nil {
+                            Label("Cancel Edit", systemImage: "xmark")
+                        } else {
+                            Label(
+                                viewModel.showingAddForm ? "Hide Form" : "Add Item",
+                                systemImage: viewModel.showingAddForm ? "minus" : "plus"
+                            )
+                        }
                     }
                 }
             }
@@ -103,8 +117,25 @@ struct InventoryView: View {
             }
         }
     }
+    
+    //Helper function to start editing mode
+    private func startEditing(_ item: InventoryItem) {
+        withAnimation {
+            // If tapping the same item, set itemToEdit to nil
+            itemToEdit = itemToEdit?.id == item.id ? nil : item
+            // Exit add mode if active
+            viewModel.showingAddForm = false
+            viewModel.showingEditForm = true
+        }
+    }
+    
+    //Helper function for delete functionality
+    private func deleteItem(_ item: InventoryItem) {
+        if let index = viewModel.inventoryItems.firstIndex(where: { $0.id == item.id }) {
+            viewModel.deleteItem(at: IndexSet(integer: index))
+        }
+    }
 }
-
 
 #Preview {
     InventoryView()
