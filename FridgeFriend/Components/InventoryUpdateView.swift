@@ -1,20 +1,13 @@
-//
-//  InventoryItemInputView.swift
-//  FridgeFriend
-//
-//  Created by Colin James on 3/19/25.
-//
-
 import SwiftUI
 
-struct InventoryItemInputView: View {
+struct InventoryUpdateView: View {
     @ObservedObject var viewModel: InventoryViewModel
-    var itemToEdit: InventoryItem? //track item being edited
-    @State private var itemName = String()
-    @State private var quantity = Int()
-    @State private var expirationDate = Date() // One week from now
+    let itemToEdit: InventoryItem? //track item being edited
+    @State private var itemName: String
+    @State private var quantity: Int
+    @State private var expirationDate: Date
     
-    //initializer handles both new items and editing existing items
+    //initializer handles editing existing items
     init(viewModel: InventoryViewModel, itemToEdit: InventoryItem? = nil){
         self.viewModel = viewModel
         self.itemToEdit = itemToEdit
@@ -29,17 +22,13 @@ struct InventoryItemInputView: View {
         VStack(spacing: 16) {
             // Header
             HStack {
-                //dynamic title for adding or deleting
-                Text(itemToEdit == nil ? "Add New Item" : "Edit Item")
+                //title for editing
+                Text("Edit Item")
                     .font(.headline)
                 Spacer()
                 Button(action: {
                     //close button functionality for edit
-                    if itemToEdit != nil {
-                        viewModel.showingEditForm = false
-                    } else {
-                        viewModel.showingAddForm = false
-                    }
+                    viewModel.showingEditForm = false
                 }) {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundColor(.secondary)
@@ -63,7 +52,6 @@ struct InventoryItemInputView: View {
             // Button
             Button(action: {
                 //handle both creation and edit of existing item
-                //isPressed.toggle()
                 if let existingItem = itemToEdit {
                     let updatedItem = InventoryItem(
                         id: existingItem.id,
@@ -74,22 +62,10 @@ struct InventoryItemInputView: View {
                     viewModel.updateItem(updatedItem)
                     // Reset fields and close form
                     viewModel.showingEditForm = false
-                } else {
-                    let newItem = InventoryItem(
-                        name: itemName,
-                        quantity: quantity,
-                        expirationDate: expirationDate
-                    )
-                    viewModel.addItem(newItem)
-                    // Reset fields and close form
-                    itemName = ""
-                    quantity = 1
-                    expirationDate = Date().addingTimeInterval(86400 * 7)
-                    viewModel.showingAddForm = false
                 }
             }) {
                 //dynamic button 1 add, 2 edit
-                Text(itemToEdit == nil ? "Save Item" : "Update Item")
+                Text("Update Item")
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(itemName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? Color.gray : Color.blue)
@@ -105,5 +81,3 @@ struct InventoryItemInputView: View {
         .padding(.top, 8)
     }
 }
-
-
