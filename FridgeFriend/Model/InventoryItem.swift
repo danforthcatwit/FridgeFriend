@@ -22,6 +22,13 @@ struct InventoryItem: Identifiable, Codable {
         self.quantity = quantity
         self.expirationDate = expirationDate
     }
+    // Implement Equatable
+    static func == (lhs: InventoryItem, rhs: InventoryItem) -> Bool {
+        return lhs.id == rhs.id &&
+               lhs.name == rhs.name &&
+               lhs.quantity == rhs.quantity &&
+               lhs.expirationDate == rhs.expirationDate
+    }
     
     enum CodingKeys: String, CodingKey {
         case id
