@@ -10,17 +10,22 @@ import SwiftUI
 struct RecipeView: View {
     @StateObject private var recipeService = RecipeService()
     @State private var showingAddRecipe = false
-    
+    @State private var selectedRecipe: Recipe?
+
     var body: some View {
         NavigationView {
             List(recipeService.recipes) { recipe in
-                VStack(alignment: .leading) {
-                    Text(recipe.title).font(.headline)
-                    Text("Time to Cook: \(recipe.timeToCook, specifier: "%.1f") min")
-                        .font(.subheadline)
-                    Text("Ingredients: \(recipe.ingredients.joined(separator: ", "))")
-                        .font(.subheadline)
+                Button(action: {
+                    selectedRecipe = recipe
+                }) {
+                    VStack(alignment: .leading) {
+                        Text(recipe.title)
+                            .font(.headline)
+                        Text("Time to Cook: \(recipe.timeToCook, specifier: "%.1f") min")
+                            .font(.subheadline)
+                    }
                 }
+                .buttonStyle(PlainButtonStyle()) // Ensures button looks like a list row
             }
             .navigationTitle("Recipes")
             .toolbar {
@@ -36,10 +41,9 @@ struct RecipeView: View {
             .sheet(isPresented: $showingAddRecipe) {
                 AddRecipeView()
             }
+            .sheet(item: $selectedRecipe) { recipe in
+                RecipeDetailView(recipe: recipe)
+            }
         }
     }
-}
-
-#Preview {
-    RecipeView()
 }
