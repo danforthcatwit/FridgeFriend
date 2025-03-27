@@ -9,5 +9,7 @@
 		<key>UILaunchScreen</key>
 		<string></string>
 	</dict>
+    <key>NSCameraUsageDescription</key>
+    <string>We need access to your camera to scan items.</string>
 </dict>
 </plist>
