@@ -22,7 +22,7 @@ struct InventoryItem: Identifiable, Codable {
         self.quantity = quantity
         self.expirationDate = expirationDate
     }
-    // Implement Equatable
+    // Equatable
     static func == (lhs: InventoryItem, rhs: InventoryItem) -> Bool {
         return lhs.id == rhs.id &&
                lhs.name == rhs.name &&

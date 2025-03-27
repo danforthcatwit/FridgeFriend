@@ -9,6 +9,7 @@ import SwiftUI
 import Firebase
 
 
+
 @main
 struct FridgeFriendApp: App {
     @StateObject var viewModel = AuthViewModel()

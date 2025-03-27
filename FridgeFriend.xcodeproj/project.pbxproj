@@ -226,6 +226,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				0FB705E72D7E57CF004F4801 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				0FAEA5062D94D2D600ED76B2 /* XCRemoteSwiftPackageReference "FatSecretSwift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0F3AEFDC2D6A8342005EEBCA /* Products */;
@@ -594,6 +595,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		0FAEA5062D94D2D600ED76B2 /* XCRemoteSwiftPackageReference "FatSecretSwift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/NicholasBellucci/FatSecretSwift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.1.0;
+			};
+		};
 		0FB705E72D7E57CF004F4801 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
