@@ -17,6 +17,7 @@ class InventoryViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var showingAddForm = false
     @Published var showingEditForm = false
+    @Published var outOfStockIngredients: [String] = []
     
     private var db = Firestore.firestore()
     private var listenerRegistration: ListenerRegistration?
@@ -124,6 +125,50 @@ class InventoryViewModel: ObservableObject {
             db.collection("users").document(userID).collection("inventoryItems").document(id).delete { [weak self] error in
                 if let error = error {
                     self?.errorMessage = "Failed to delete item: \(error.localizedDescription)"
+                }
+            }
+        }
+    }
+    
+    func useRecipe(_ recipe: Recipe) {
+        guard let userID = userID else {
+            errorMessage = "User ID not available"
+            return
+        }
+
+        outOfStockIngredients.removeAll() // Reset list before checking
+
+        let inventoryRef = db.collection("users").document(userID).collection("inventoryItems")
+
+        for ingredient in recipe.ingredients {
+            inventoryRef.whereField("name", isEqualTo: ingredient).getDocuments { snapshot, error in
+                if let error = error {
+                    print("Error fetching inventory item: \(error)")
+                    return
+                }
+
+                guard let document = snapshot?.documents.first else {
+                    DispatchQueue.main.async {
+                        self.outOfStockIngredients.append(ingredient) // Add missing ingredient
+                    }
+                    print("Ingredient \(ingredient) not found in inventory")
+                    return
+                }
+
+                do {
+                    var item = try document.data(as: InventoryItem.self)
+                    
+                    if item.quantity > 0 {
+                        item.quantity -= 1
+                        try inventoryRef.document(document.documentID).setData(from: item)
+                    } else {
+                        DispatchQueue.main.async {
+                            self.outOfStockIngredients.append(ingredient) // Track if out of stock
+                        }
+                        print("Ingredient \(ingredient) is out of stock.")
+                    }
+                } catch {
+                    print("Error updating ingredient: \(error)")
                 }
             }
         }

@@ -11,6 +11,7 @@ struct RecipeView: View {
     @StateObject private var recipeService = RecipeService()
     @State private var showingAddRecipe = false
     @State private var selectedRecipe: Recipe?
+    @StateObject private var inventoryViewModel = InventoryViewModel()
 
     var body: some View {
         NavigationView {
@@ -42,7 +43,7 @@ struct RecipeView: View {
                 AddRecipeView()
             }
             .sheet(item: $selectedRecipe) { recipe in
-                RecipeDetailView(recipe: recipe)
+                RecipeDetailView(recipe: recipe, inventoryViewModel: inventoryViewModel)
             }
         }
     }
