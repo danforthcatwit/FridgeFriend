@@ -47,4 +47,34 @@ class RecipeService: ObservableObject {
                 } ?? []
             }
     }
+    
+    func deleteRecipe(_ recipe: Recipe, completion: @escaping (Error?) -> Void) {
+        guard let userId = userId else { return }
+        
+        db.collection(collection)
+            .whereField("userId", isEqualTo: userId)
+            .whereField("id", isEqualTo: recipe.id)
+            .getDocuments { snapshot, error in
+                if let error = error {
+                    completion(error)
+                    return
+                }
+                
+                guard let document = snapshot?.documents.first else {
+                    completion(nil) // No matching document found
+                    return
+                }
+                
+                document.reference.delete { error in
+                    if let error = error {
+                        completion(error)
+                    } else {
+                        DispatchQueue.main.async {
+                            self.recipes.removeAll { $0.id == recipe.id }
+                        }
+                        completion(nil)
+                    }
+                }
+            }
+    }
 }

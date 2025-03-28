@@ -15,21 +15,36 @@ struct RecipeView: View {
 
     var body: some View {
         NavigationView {
-            List(recipeService.recipes) { recipe in
-                Button(action: {
-                    selectedRecipe = recipe
-                }) {
-                    VStack(alignment: .leading) {
-                        Text(recipe.title)
-                            .font(.headline)
-                        Text("Time to Cook: \(recipe.timeToCook, specifier: "%.1f") min")
-                            .font(.subheadline)
+            List {
+                ForEach(recipeService.recipes) { recipe in
+                    Button(action: {
+                        selectedRecipe = recipe
+                    }) {
+                        VStack(alignment: .leading) {
+                            Text(recipe.title)
+                                .font(.headline)
+                            Text("Time to Cook: \(recipe.timeToCook, specifier: "%.1f") min")
+                                .font(.subheadline)
+                        }
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+                .onDelete { indexSet in
+                    for index in indexSet {
+                        let recipe = recipeService.recipes[index]
+                        recipeService.deleteRecipe(recipe) { error in
+                            if let error = error {
+                                print("Error deleting recipe: \(error.localizedDescription)")
+                            }
+                        }
                     }
                 }
-                .buttonStyle(PlainButtonStyle()) // Ensures button looks like a list row
             }
             .navigationTitle("Recipes")
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    EditButton()
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { showingAddRecipe = true }) {
                         Image(systemName: "plus")
