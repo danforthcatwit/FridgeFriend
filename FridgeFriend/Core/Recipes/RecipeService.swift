@@ -51,9 +51,14 @@ class RecipeService: ObservableObject {
     func deleteRecipe(_ recipe: Recipe, completion: @escaping (Error?) -> Void) {
         guard let userId = userId else { return }
         
+        guard let recipeId = recipe.id else {
+            completion(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Recipe ID is nil"]))
+            return
+        }
+
         db.collection(collection)
             .whereField("userId", isEqualTo: userId)
-            .whereField("id", isEqualTo: recipe.id)
+            .whereField("id", isEqualTo: recipeId)
             .getDocuments { snapshot, error in
                 if let error = error {
                     completion(error)

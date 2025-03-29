@@ -140,8 +140,15 @@ class InventoryViewModel: ObservableObject {
 
         let inventoryRef = db.collection("users").document(userID).collection("inventoryItems")
 
-        for ingredient in recipe.ingredients {
-            inventoryRef.whereField("name", isEqualTo: ingredient).getDocuments { snapshot, error in
+        for ingredientEntry in recipe.ingredients {
+            let components = ingredientEntry.split(separator: "-").map { $0.trimmingCharacters(in: .whitespaces) }
+            
+            guard components.count == 2, let ingredientName = components.first, let requiredQuantity = Double(components.last ?? "0") else {
+                print("Invalid ingredient format: \(ingredientEntry)")
+                continue
+            }
+
+            inventoryRef.whereField("name", isEqualTo: ingredientName).getDocuments { snapshot, error in
                 if let error = error {
                     print("Error fetching inventory item: \(error)")
                     return
@@ -149,23 +156,23 @@ class InventoryViewModel: ObservableObject {
 
                 guard let document = snapshot?.documents.first else {
                     DispatchQueue.main.async {
-                        self.outOfStockIngredients.append(ingredient) // Add missing ingredient
+                        self.outOfStockIngredients.append(ingredientName) // Add missing ingredient
                     }
-                    print("Ingredient \(ingredient) not found in inventory")
+                    print("Ingredient \(ingredientName) not found in inventory")
                     return
                 }
 
                 do {
                     var item = try document.data(as: InventoryItem.self)
-                    
-                    if item.quantity > 0 {
-                        item.quantity -= 1
+
+                    if item.quantity >= Int(requiredQuantity) {
+                        item.quantity -= Int(requiredQuantity)
                         try inventoryRef.document(document.documentID).setData(from: item)
                     } else {
                         DispatchQueue.main.async {
-                            self.outOfStockIngredients.append(ingredient) // Track if out of stock
+                            self.outOfStockIngredients.append(ingredientName) // Track if out of stock
                         }
-                        print("Ingredient \(ingredient) is out of stock.")
+                        print("Not enough \(ingredientName). Required: \(requiredQuantity), Available: \(item.quantity)")
                     }
                 } catch {
                     print("Error updating ingredient: \(error)")
