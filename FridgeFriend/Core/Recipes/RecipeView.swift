@@ -9,50 +9,85 @@ import SwiftUI
 
 struct RecipeView: View {
     @StateObject private var recipeService = RecipeService()
+    @StateObject private var inventoryViewModel = InventoryViewModel()
     @State private var showingAddRecipe = false
     @State private var selectedRecipe: Recipe?
-    @StateObject private var inventoryViewModel = InventoryViewModel()
+    @State private var selectedTab = 0 // 0 for custom recipes, 1 for suggested recipes
 
     var body: some View {
         NavigationView {
-            List {
-                ForEach(recipeService.recipes) { recipe in
-                    Button(action: {
-                        selectedRecipe = recipe
-                    }) {
-                        VStack(alignment: .leading) {
-                            Text(recipe.title)
-                                .font(.headline)
-                            Text("Time to Cook: \(recipe.timeToCook, specifier: "%.1f") min")
-                                .font(.subheadline)
+            VStack {
+                // Picker to toggle between Custom and Suggested Recipes
+                Picker("Recipe Type", selection: $selectedTab) {
+                    Text("Custom Recipes").tag(0)
+                    Text("Suggested Recipes").tag(1)
+                }
+                .pickerStyle(SegmentedPickerStyle())
+                .padding()
+
+                // Display content based on selected tab
+                if selectedTab == 0 {
+                    // Custom Recipes
+                    List {
+                        ForEach(recipeService.recipes) { recipe in
+                            Button(action: {
+                                selectedRecipe = recipe
+                            }) {
+                                VStack(alignment: .leading) {
+                                    Text(recipe.title)
+                                        .font(.headline)
+                                    Text("Time to Cook: \(recipe.timeToCook, specifier: "%.1f") min")
+                                        .font(.subheadline)
+                                }
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                        .onDelete { indexSet in
+                            for index in indexSet {
+                                let recipe = recipeService.recipes[index]
+                                recipeService.deleteRecipe(recipe) { error in
+                                    if let error = error {
+                                        print("Error deleting recipe: \(error.localizedDescription)")
+                                    }
+                                }
+                            }
                         }
                     }
-                    .buttonStyle(PlainButtonStyle())
-                }
-                .onDelete { indexSet in
-                    for index in indexSet {
-                        let recipe = recipeService.recipes[index]
-                        recipeService.deleteRecipe(recipe) { error in
-                            if let error = error {
-                                print("Error deleting recipe: \(error.localizedDescription)")
+                } else {
+                    // Suggested Recipes
+                    List {
+                        ForEach(inventoryViewModel.suggestedRecipes) { recipe in
+                            Button(action: {
+                                selectedRecipe = recipe
+                            }) {
+                                VStack(alignment: .leading) {
+                                    Text(recipe.title)
+                                        .font(.headline)
+                                    Text("Time to Cook: \(recipe.timeToCook, specifier: "%.1f") min")
+                                        .font(.subheadline)
+                                }
                             }
+                            .buttonStyle(PlainButtonStyle())
                         }
                     }
                 }
             }
             .navigationTitle("Recipes")
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    EditButton()
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { showingAddRecipe = true }) {
-                        Image(systemName: "plus")
+                if selectedTab == 0 {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        EditButton()
+                    }
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(action: { showingAddRecipe = true }) {
+                            Image(systemName: "plus")
+                        }
                     }
                 }
             }
             .onAppear {
                 recipeService.fetchUserRecipes()
+                inventoryViewModel.fetchSuggestedRecipes() // Fetch suggested recipes based on inventory
             }
             .sheet(isPresented: $showingAddRecipe) {
                 AddRecipeView()

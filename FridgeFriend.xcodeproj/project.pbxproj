@@ -33,6 +33,7 @@
 		0F3AEFDB2D6A8342005EEBCA /* FridgeFriend.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FridgeFriend.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0F3AEFEB2D6A8344005EEBCA /* FridgeFriendTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FridgeFriendTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0F3AEFF52D6A8344005EEBCA /* FridgeFriendUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FridgeFriendUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		856AC63E2D98D83F0082EA9C /* Secrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Secrets.plist; path = FridgeFriend/Secrets.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -97,6 +98,7 @@
 		0F3AEFD22D6A8342005EEBCA = {
 			isa = PBXGroup;
 			children = (
+				856AC63E2D98D83F0082EA9C /* Secrets.plist */,
 				0F3AEFDD2D6A8342005EEBCA /* FridgeFriend */,
 				0F3AEFEE2D6A8344005EEBCA /* FridgeFriendTests */,
 				0F3AEFF82D6A8344005EEBCA /* FridgeFriendUITests */,

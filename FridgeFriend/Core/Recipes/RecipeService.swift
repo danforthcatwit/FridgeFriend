@@ -49,37 +49,21 @@ class RecipeService: ObservableObject {
     }
     
     func deleteRecipe(_ recipe: Recipe, completion: @escaping (Error?) -> Void) {
-        guard let userId = userId else { return }
-        
         guard let recipeId = recipe.id else {
             completion(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Recipe ID is nil"]))
             return
         }
 
-        db.collection(collection)
-            .whereField("userId", isEqualTo: userId)
-            .whereField("id", isEqualTo: recipeId)
-            .getDocuments { snapshot, error in
-                if let error = error {
-                    completion(error)
-                    return
+        // Directly reference the document instead of querying for it
+        db.collection(collection).document(recipeId).delete { error in
+            if let error = error {
+                completion(error)
+            } else {
+                DispatchQueue.main.async {
+                    self.recipes.removeAll { $0.id == recipe.id }
                 }
-                
-                guard let document = snapshot?.documents.first else {
-                    completion(nil) // No matching document found
-                    return
-                }
-                
-                document.reference.delete { error in
-                    if let error = error {
-                        completion(error)
-                    } else {
-                        DispatchQueue.main.async {
-                            self.recipes.removeAll { $0.id == recipe.id }
-                        }
-                        completion(nil)
-                    }
-                }
+                completion(nil)
             }
+        }
     }
 }

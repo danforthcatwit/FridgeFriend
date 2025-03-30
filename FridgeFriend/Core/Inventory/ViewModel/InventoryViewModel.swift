@@ -18,6 +18,7 @@ class InventoryViewModel: ObservableObject {
     @Published var showingAddForm = false
     @Published var showingEditForm = false
     @Published var outOfStockIngredients: [String] = []
+    @Published var suggestedRecipes: [Recipe] = []
     
     private var db = Firestore.firestore()
     private var listenerRegistration: ListenerRegistration?
@@ -179,5 +180,96 @@ class InventoryViewModel: ObservableObject {
                 }
             }
         }
+    }
+
+    func fetchSuggestedRecipes() {
+        guard let apiKey = SecretsManager.getAPIKey(for: "SpoonacularAPIKey") else {
+            print("DEBUG: Missing Spoonacular API Key")
+            errorMessage = "Missing Spoonacular API Key"
+            return
+        }
+
+        guard !inventoryItems.isEmpty else {
+            print("DEBUG: No inventory items available")
+            suggestedRecipes = []
+            return
+        }
+
+        // Get ingredients with quantity > 0
+        let availableIngredients = inventoryItems
+            .filter { $0.quantity > 0 }
+            .map { $0.name }
+            .joined(separator: ",")
+
+        print("DEBUG: Available ingredients: \(availableIngredients)")
+
+        guard !availableIngredients.isEmpty else {
+            print("DEBUG: No available ingredients with quantity > 0")
+            suggestedRecipes = []
+            return
+        }
+
+        // First, get recipes that can be made with only our ingredients
+        let urlString = "https://api.spoonacular.com/recipes/findByIngredients?ingredients=\(availableIngredients)&number=20&ranking=1&ignorePantry=true&apiKey=\(apiKey)"
+        
+        print("DEBUG: Making request to Spoonacular API")
+        
+        guard let url = URL(string: urlString) else {
+            print("DEBUG: Invalid URL for Spoonacular API")
+            errorMessage = "Invalid URL for Spoonacular API"
+            return
+        }
+
+        isLoading = true
+        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+            DispatchQueue.main.async {
+                self?.isLoading = false
+                if let error = error {
+                    print("DEBUG: API request failed with error: \(error.localizedDescription)")
+                    self?.errorMessage = "Failed to fetch recipes: \(error.localizedDescription)"
+                    return
+                }
+
+                guard let data = data else {
+                    print("DEBUG: No data received from Spoonacular API")
+                    self?.errorMessage = "No data received from Spoonacular API"
+                    return
+                }
+
+                do {
+                    let spoonacularRecipes = try JSONDecoder().decode([SpoonacularRecipe].self, from: data)
+                    print("DEBUG: Successfully decoded \(spoonacularRecipes.count) recipes")
+                    
+                    // Convert to our Recipe model and remove duplicates
+                    var uniqueRecipes: [Recipe] = []
+                    var seenIds = Set<Int>()
+                    
+                    // First, add recipes that can be made with only our ingredients (missedIngredientCount = 0)
+                    for recipe in spoonacularRecipes {
+                        if recipe.missedIngredientCount == 0 && !seenIds.contains(recipe.id) {
+                            uniqueRecipes.append(Recipe(from: recipe))
+                            seenIds.insert(recipe.id)
+                        }
+                    }
+                    
+                    // Then, add recipes that require additional ingredients
+                    for recipe in spoonacularRecipes {
+                        if recipe.missedIngredientCount > 0 && !seenIds.contains(recipe.id) {
+                            uniqueRecipes.append(Recipe(from: recipe))
+                            seenIds.insert(recipe.id)
+                        }
+                    }
+                    
+                    // Sort recipes by usedIngredientCount (descending) to show recipes that use more of our ingredients first
+                    uniqueRecipes.sort { ($0.usedIngredientCount ?? 0) > ($1.usedIngredientCount ?? 0) }
+                    
+                    self?.suggestedRecipes = uniqueRecipes
+                    print("DEBUG: Final unique recipes count: \(uniqueRecipes.count)")
+                } catch {
+                    print("DEBUG: Failed to decode recipes: \(error.localizedDescription)")
+                    self?.errorMessage = "Failed to decode recipes: \(error.localizedDescription)"
+                }
+            }
+        }.resume()
     }
 }

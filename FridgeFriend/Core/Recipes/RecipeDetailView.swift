@@ -53,14 +53,35 @@ struct RecipeDetailView: View {
                 Text("Ingredients")
                     .font(.title2)
                     .fontWeight(.semibold)
-                Text(recipe.ingredients.joined(separator: ", "))
-                    .font(.body)
-
+                
+                if let usedCount = recipe.usedIngredientCount {
+                    Text("Using \(usedCount) ingredients from your inventory")
+                        .font(.subheadline)
+                        .foregroundColor(.green)
+                }
+                
+                if let missedCount = recipe.missedIngredientCount, let missedIngredients = recipe.missedIngredients {
+                    Text("Missing \(missedCount) ingredients:")
+                        .font(.subheadline)
+                        .foregroundColor(.red)
+                    ForEach(missedIngredients, id: \.self) { ingredient in
+                        Text("• \(ingredient)")
+                            .font(.subheadline)
+                            .foregroundColor(.red)
+                    }
+                }
+                
                 Text("Instructions")
                     .font(.title2)
                     .fontWeight(.semibold)
-                Text(recipe.instructions)
-                    .font(.body)
+                if let instructions = recipe.instructions {
+                    Text(instructions)
+                        .font(.body)
+                } else {
+                    Text("Instructions not available for this recipe. Please visit Spoonacular for full recipe details.")
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                }
 
                 // Use Recipe Button
                 Button(action: {

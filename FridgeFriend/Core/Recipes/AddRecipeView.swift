@@ -46,7 +46,12 @@ struct AddRecipeView: View {
                     }
                 }
                 
-                TextField("Instructions", text: $instructions)
+                Section(header: Text("Instructions")) {
+                    TextEditor(text: $instructions)
+                        .frame(minHeight: 100) // Adjust height for better input visibility
+                        .border(Color.gray, width: 0.5) // Optional: Visual separation
+                }
+                
                 Stepper(value: $timeToCook, in: 0...240, step: 1) {
                     Text("Time to Cook: \(timeToCook, specifier: "%.0f") min")
                 }
