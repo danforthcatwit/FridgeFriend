@@ -68,7 +68,50 @@ class InventoryViewModel: ObservableObject {
                 
                 self.inventoryItems = documents.compactMap { document -> InventoryItem? in
                     do {
-                        return try document.data(as: InventoryItem.self)
+                        var item = try document.data(as: InventoryItem.self)
+                        
+                        // Check expiration status
+                        if Date() > item.expirationDate && !item.isExpired {
+                            item.isExpired = true
+                            
+                            // Update in Firestore if newly expired
+                            if let id = item.id {
+                                do {
+                                    try self.db.collection("users").document(userID).collection("inventoryItems").document(id).setData(from: item)
+                                } catch {
+                                    print("Error updating expired item: \(error)")
+                                }
+                            }
+                        }
+                        else {
+                            item.isExpired = false
+                        }
+                        
+                        // Check expiringSoon status
+                        let currentDate = Date()
+                        let daysUntilExpiration = Calendar.current.dateComponents([.day], from: currentDate, to: item.expirationDate).day ?? 0
+
+                        // Item is expiring soon if it expires within the next 2 days but hasn't expired yet
+                        let isExpiringSoon = daysUntilExpiration >= 0 && daysUntilExpiration <= 2
+
+                        // Only update if the status has changed
+                        if isExpiringSoon != item.expiringSoon {
+                            item.expiringSoon = isExpiringSoon
+                            
+                            // Update in Firestore if status changed
+                            if let id = item.id {
+                                do {
+                                    try self.db.collection("users").document(userID).collection("inventoryItems").document(id).setData(from: item)
+                                } catch {
+                                    print("Error updating expiring soon status: \(error)")
+                                }
+                            }
+                        }
+                        else {
+                            item.expiringSoon = false
+                        }
+                        
+                        return item
                     } catch {
                         print("Error decoding item: \(error)")
                         return nil
@@ -76,7 +119,6 @@ class InventoryViewModel: ObservableObject {
                 }
             }
     }
-    
     func addItem(_ item: InventoryItem) {
         //checks for user ID before proceeding
         guard let userID = userID else {
@@ -128,4 +170,6 @@ class InventoryViewModel: ObservableObject {
             }
         }
     }
-}
+        
+    }
+

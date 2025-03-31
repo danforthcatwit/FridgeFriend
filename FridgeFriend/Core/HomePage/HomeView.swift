@@ -9,6 +9,8 @@ import SwiftUI
 import Charts
 
 struct HomeView: View {
+    @StateObject private var viewModel = HomeViewModel()
+    
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 20.0) {
@@ -29,22 +31,43 @@ struct HomeView: View {
                         .font(.title2)
                         .bold()
                     
-                    VStack(alignment: .leading) {
-                        Text("• Apple")
-                        Text("• Ground Beef")
-                        Text("• Chicken")
+                    if viewModel.isLoading {
+                        ProgressView("Loading items...")
+                            .padding()
+                    } else if viewModel.expiringItems.isEmpty {
+                        Text("No items expiring soon")
+                            .padding()
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .background(Color.green.opacity(0.2))
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(.black, lineWidth: 2)
+                            )
+                    } else {
+                        VStack(alignment: .leading, spacing: 8) {
+                            ForEach(viewModel.expiringItems) { item in
+                                HStack {
+                                    Text("• \(item.name)")
+                                        .fontWeight(.medium)
+                                    
+                                    Spacer()
+                                    
+                                    Text("Expires \(viewModel.expirationTimeString(for: item))")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.red.opacity(0.3))
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(.black, lineWidth: 2)
+                        )
                     }
-                    .padding()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.red.opacity(0.3))
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(.black, lineWidth: 2)
-
-                    )
-                    
-                    
                 }
                 .padding(.horizontal, 0)
 
@@ -70,6 +93,9 @@ struct HomeView: View {
             }
         }
         .padding()
+        .onAppear {
+            viewModel.fetchExpiringItems()
+        }
     }
 }
 
