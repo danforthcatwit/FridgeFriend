@@ -50,7 +50,7 @@ struct InventoryItemView: View {
             .frame(width: 120)
         }
         .padding()
-        .background(Color(.secondarySystemBackground))
+        .background(isExpired ? .red : Color(.secondarySystemBackground))
         .cornerRadius(10)
     }
     
@@ -58,6 +58,11 @@ struct InventoryItemView: View {
         let calendar = Calendar.current
         let weekFromNow = calendar.date(byAdding: .day, value: 7, to: Date())!
         return expirationDate <= weekFromNow
+    }
+    
+    private var isExpired: Bool {
+        return expirationDate < Date()
+        
     }
 }
 

@@ -45,6 +45,8 @@ struct InventoryView: View {
                                         quantity: item.quantity,
                                         expirationDate: item.expirationDate
                                     )
+                                               
+                                    
                                     .listRowSeparator(.hidden)
                                     .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                                     .contextMenu {
@@ -117,6 +119,7 @@ struct InventoryView: View {
             }
         }
     }
+
     
     //Helper function to start editing mode
     private func startEditing(_ item: InventoryItem) {

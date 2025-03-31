@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 struct InventoryItemInputView: View {
     @ObservedObject var viewModel: InventoryViewModel
@@ -13,6 +14,22 @@ struct InventoryItemInputView: View {
     @State private var itemName = String()
     @State private var quantity = Int()
     @State private var expirationDate = Date() // One week from now
+    
+    //For autocomplete functionality
+    @State private var suggestions: [String] = []
+    @State private var isShowingSuggestions = false
+    @State private var debounceTimer: Timer?
+    
+    //FatSecret Service
+    private let fatSecretService = FatSecretService(
+        apiKey:"5c0ad605b4bd4639ac767946a121332a",
+        apiSecret: "68a192dc5d6b472585692e37d109fc63",
+        baseURL: "https://platform.fatsecret.com/rest",
+        oauthURL: "https://oauth.fatsecret.com/connect/token"
+    )
+    
+    //Adds cancellable for Combine
+    @State private var searchCancellable: AnyCancellable?
     
     //initializer handles both new items and editing existing items
     init(viewModel: InventoryViewModel, itemToEdit: InventoryItem? = nil){
@@ -48,8 +65,38 @@ struct InventoryItemInputView: View {
             
             // Input fields
             VStack(spacing: 12) {
-                TextField("Item Name", text: $itemName)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                VStack(alignment: .leading) {
+                    TextField("Item Name", text: $itemName)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .onChange(of: itemName) { newValue in
+                            // Trigger autocomplete when text changes
+                            handleTextChange(newValue)
+                        }
+                    
+                    // Suggestions dropdown
+                    if isShowingSuggestions && !suggestions.isEmpty {
+                        ScrollView {
+                            VStack(alignment: .leading, spacing: 8) {
+                                ForEach(suggestions, id: \.self) { suggestion in
+                                    Text(suggestion)
+                                        .padding(.vertical, 4)
+                                        .padding(.horizontal, 8)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .background(Color(.systemBackground))
+                                        .onTapGesture {
+                                            itemName = suggestion
+                                            isShowingSuggestions = false
+                                        }
+                                }
+                            }
+                        }
+                        .frame(maxHeight: 200)
+                        .background(Color(.systemBackground))
+                        .cornerRadius(8)
+                        .shadow(radius: 2)
+                        .zIndex(1) // Ensure suggestions appear above other content
+                    }
+                }
                 
                 HStack {
                     Text("Quantity:")
@@ -63,7 +110,6 @@ struct InventoryItemInputView: View {
             // Button
             Button(action: {
                 //handle both creation and edit of existing item
-                //isPressed.toggle()
                 if let existingItem = itemToEdit {
                     let updatedItem = InventoryItem(
                         id: existingItem.id,
@@ -103,7 +149,59 @@ struct InventoryItemInputView: View {
         .cornerRadius(12)
         .padding(.horizontal)
         .padding(.top, 8)
+        // Dismiss suggestions when tapping outside
+        .onTapGesture {
+            isShowingSuggestions = false
+        }
+        .overlay(
+            Group {
+                if isShowingSuggestions && !suggestions.isEmpty {
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            isShowingSuggestions = false
+                        }
+                }
+            }
+        )
+    }
+    
+    // Handle text changes with debouncing
+    private func handleTextChange(_ newValue: String) {
+        // Cancel existing timer and search
+        debounceTimer?.invalidate()
+        searchCancellable?.cancel()
+        
+        // Only search if we have at least 2 characters
+        if newValue.count >= 2 {
+            // Debounce for 0.5 seconds to avoid too many API calls
+            debounceTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { _ in
+                fetchSuggestions(query: newValue)
+            }
+        } else {
+            // Clear suggestions if text is too short
+            suggestions = []
+            isShowingSuggestions = false
+        }
+    }
+    
+    // Fetch suggestions from API
+    private func fetchSuggestions(query: String) {
+        print("Fetching suggestions for query: \(query)") // Debug log
+        searchCancellable = fatSecretService.searchFoods(query: query)
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { completion in
+                    if case .failure(let error) = completion {
+                        print("Error fetching suggestions: \(error)")
+                    }
+                },
+                receiveValue: { suggestions in
+                    print("Received suggestions: \(suggestions)") // Debug log
+                    self.suggestions = suggestions
+                    self.isShowingSuggestions = !suggestions.isEmpty
+                    print("isShowingSuggestions: \(self.isShowingSuggestions)") // Debug log
+                }
+            )
     }
 }
-
-
