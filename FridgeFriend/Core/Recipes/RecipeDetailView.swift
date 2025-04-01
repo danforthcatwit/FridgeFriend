@@ -20,70 +20,140 @@ struct RecipeDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 20) {
                 if let imageURL = recipe.imageURL, let url = URL(string: imageURL) {
                     AsyncImage(url: url) { phase in
                         switch phase {
                         case .empty:
                             ProgressView()
+                                .frame(maxWidth: .infinity, minHeight: 200)
                         case .success(let image):
-                            image.resizable()
-                                .scaledToFit()
-                                .frame(maxWidth: .infinity, maxHeight: 300)
-                                .cornerRadius(10)
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(maxWidth: .infinity, maxHeight: 250)
+                                .clipped()
+                                .cornerRadius(12)
                         case .failure:
                             Image(systemName: "photo")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(maxWidth: .infinity, maxHeight: 300)
-                                .foregroundColor(.gray)
+                                .font(.system(size: 40))
+                                .frame(maxWidth: .infinity, maxHeight: 250)
+                                .background(Color(.systemGray6))
+                                .cornerRadius(12)
                         @unknown default:
                             EmptyView()
                         }
                     }
                 }
-
-                Text(recipe.title)
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-
-                Text("Time to Cook: \(recipe.timeToCook, specifier: "%.1f") min")
-                    .font(.headline)
-
-                Text("Ingredients")
-                    .font(.title2)
-                    .fontWeight(.semibold)
                 
-                if let usedCount = recipe.usedIngredientCount {
-                    Text("Using \(usedCount) ingredients from your inventory")
-                        .font(.subheadline)
-                        .foregroundColor(.green)
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(recipe.title)
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(.primary)
+                    
+                    HStack {
+                        Image(systemName: "clock.fill")
+                            .foregroundColor(.secondary)
+                        Text("\(recipe.timeToCook, specifier: "%.0f") minutes")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                    }
                 }
+                .padding(.horizontal)
                 
-                if let missedCount = recipe.missedIngredientCount, let missedIngredients = recipe.missedIngredients {
-                    Text("Missing \(missedCount) ingredients:")
-                        .font(.subheadline)
-                        .foregroundColor(.red)
-                    ForEach(missedIngredients, id: \.self) { ingredient in
-                        Text("• \(ingredient)")
-                            .font(.subheadline)
-                            .foregroundColor(.red)
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Ingredients")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                        .padding(.horizontal)
+                    
+                    if !recipe.ingredients.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            if let usedCount = recipe.usedIngredientCount {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(.green)
+                                    Text("From Your Inventory (\(usedCount))")
+                                        .font(.headline)
+                                        .foregroundColor(.green)
+                                }
+                                .padding(.bottom, 4)
+                            }
+                            
+                            ForEach(recipe.ingredients, id: \.self) { ingredient in
+                                HStack(alignment: .top, spacing: 12) {
+                                    Image(systemName: "circle.fill")
+                                        .font(.system(size: 6))
+                                        .foregroundColor(.secondary)
+                                        .padding(.top, 8)
+                                    Text(ingredient)
+                                        .font(.body)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                                .frame(minHeight: 44)
+                            }
+                        }
+                        .padding(16)
+                        .background(Color(.systemGreen).opacity(0.1))
+                        .cornerRadius(12)
+                        .padding(.horizontal)
+                    } else {
+                        Text("No ingredients listed")
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal)
+                    }
+                    
+                    if let missedCount = recipe.missedIngredientCount,
+                       let missedIngredients = recipe.missedIngredients,
+                       !missedIngredients.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "exclamationmark.circle.fill")
+                                    .foregroundColor(.red)
+                                Text("Missing Ingredients (\(missedCount))")
+                                    .font(.headline)
+                                    .foregroundColor(.red)
+                            }
+                            .padding(.bottom, 4)
+                            
+                            ForEach(missedIngredients, id: \.self) { ingredient in
+                                HStack(alignment: .top, spacing: 12) {
+                                    Image(systemName: "circle.fill")
+                                        .font(.system(size: 6))
+                                        .foregroundColor(.secondary)
+                                        .padding(.top, 8)
+                                    Text(ingredient)
+                                        .font(.body)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                                .frame(minHeight: 44)
+                            }
+                        }
+                        .padding(16)
+                        .background(Color(.systemRed).opacity(0.1))
+                        .cornerRadius(12)
+                        .padding(.horizontal)
                     }
                 }
                 
-                Text("Instructions")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                if let instructions = recipe.instructions {
-                    Text(instructions)
-                        .font(.body)
-                } else {
-                    Text("Instructions not available for this recipe. Please visit Spoonacular for full recipe details.")
-                        .font(.body)
-                        .foregroundColor(.secondary)
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Instructions")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                    
+                    if let instructions = recipe.instructions {
+                        Text(instructions)
+                            .font(.body)
+                            .lineSpacing(4)
+                    } else {
+                        Text("Instructions not available for this recipe. Please visit Spoonacular for full recipe details.")
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                    }
                 }
-
-                // Use Recipe Button
+                .padding(.horizontal)
+                
                 Button(action: {
                     inventoryViewModel.useRecipe(recipe)
                     if inventoryViewModel.outOfStockIngredients.isEmpty {
@@ -93,36 +163,37 @@ struct RecipeDetailView: View {
                         showingAlert = true
                     }
                 }) {
-                    Text("Use Recipe")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.red)
-                        .cornerRadius(10)
+                    HStack {
+                        Image(systemName: "cart.fill")
+                        Text("Use Recipe")
+                    }
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, minHeight: 50)
+                    .background(Color.accentColor)
+                    .cornerRadius(12)
                 }
+                .padding(.horizontal)
                 .padding(.top, 20)
-                .alert(isPresented: $showingUseRecipeError) {
-                    Alert(title: Text("Error"), message: Text(errorMessage ?? "Unknown error"), dismissButton: .default(Text("OK")))
-                }
-                .alert(isPresented: $showingAlert) {
-                    Alert(
-                        title: Text("Out of Stock"),
-                        message: Text("You're missing: \(inventoryViewModel.outOfStockIngredients.joined(separator: ", "))"),
-                        dismissButton: .default(Text("OK"))
-                    )
-                }
-                .alert(isPresented: $showingConfirmation) {
-                    Alert(
-                        title: Text("Recipe Used"),
-                        message: Text(confirmationMessage ?? "Ingredients updated."),
-                        dismissButton: .default(Text("OK"))
-                    )
-                }
             }
-            .padding()
+            .padding(.vertical, 20)
         }
-        .navigationTitle("Recipe Details")
+        .navigationBarTitleDisplayMode(.inline)
+        .alert("Error", isPresented: $showingUseRecipeError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(errorMessage ?? "Unknown error")
+        }
+        .alert("Out of Stock", isPresented: $showingAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("You're missing: \(inventoryViewModel.outOfStockIngredients.joined(separator: ", "))")
+        }
+        .alert("Recipe Used", isPresented: $showingConfirmation) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(confirmationMessage ?? "Ingredients updated.")
+        }
     }
 
     // Function to update inventory
