@@ -12,6 +12,7 @@ struct RegistrationView: View {
     @State private var name = ""
     @State private var confirmPassword = ""
     @State private var password = ""
+    @State private var errorMessage: String?
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var viewModel: AuthViewModel
     
@@ -63,14 +64,26 @@ struct RegistrationView: View {
                     }
                 }
             
-            
+                if let errorMessage = errorMessage {
+                    Text(errorMessage)
+                        .foregroundColor(.red)
+                        .font(.system(size:14))
+                        .fontWeight(.semibold)
+                        .padding(.top, 8)
+                        .transition(.opacity)
+                }
             
                 
                 Button {
                     Task {
-                        try await viewModel.createUser(withEmail: email,
-                                                       password: password,
-                                                       name: name)
+                        do {
+                            try await viewModel.createUser(withEmail: email,
+                                                           password: password,
+                                                           name: name)
+                            errorMessage = nil
+                        } catch {
+                            errorMessage = "Email is already in use. Please try again."
+                        }
                    
                     }
                 } label: {

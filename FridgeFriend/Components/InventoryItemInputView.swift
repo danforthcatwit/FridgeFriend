@@ -4,7 +4,6 @@
 //
 //  Created by Colin James on 3/19/25.
 //
-
 import SwiftUI
 import Combine
 
@@ -78,15 +77,20 @@ struct InventoryItemInputView: View {
                         ScrollView {
                             VStack(alignment: .leading, spacing: 8) {
                                 ForEach(suggestions, id: \.self) { suggestion in
-                                    Text(suggestion)
-                                        .padding(.vertical, 4)
-                                        .padding(.horizontal, 8)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .background(Color(.systemBackground))
-                                        .onTapGesture {
+                                    Button(action: {//when selecting item it autofils
+                                        // Update input field and hide suggestions
+                                        withAnimation {
                                             itemName = suggestion
                                             isShowingSuggestions = false
                                         }
+                                    }) {
+                                        Text(suggestion)
+                                            .padding(.vertical, 4)
+                                            .padding(.horizontal, 8)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .background(Color(.systemBackground))
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
                                 }
                             }
                         }
@@ -153,17 +157,6 @@ struct InventoryItemInputView: View {
         .onTapGesture {
             isShowingSuggestions = false
         }
-        .overlay(
-            Group {
-                if isShowingSuggestions && !suggestions.isEmpty {
-                    Color.clear
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            isShowingSuggestions = false
-                        }
-                }
-            }
-        )
     }
     
     // Handle text changes with debouncing

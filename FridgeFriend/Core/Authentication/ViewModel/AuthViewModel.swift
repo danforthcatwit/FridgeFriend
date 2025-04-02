@@ -32,8 +32,21 @@ class AuthViewModel: ObservableObject {
             self.userSession = result.user
             await fetchUserData()
         }
-        catch {
+        catch let error as NSError{
             print("DEBUG: Failed to login with error \(error.localizedDescription)")
+            throw error
+        }
+    }
+    //need to implement
+    func resetPassword(withEmail email: String) async throws -> Error? {
+        do {
+            // Firebase Auth method to send password reset email
+            try await Auth.auth().sendPasswordReset(withEmail: email)
+            print("DEBUG: Password reset email sent to \(email)")
+            return nil
+        } catch {
+            print("DEBUG: Failed to send password reset email with error \(error.localizedDescription)")
+            return error
         }
     }
     
@@ -45,8 +58,9 @@ class AuthViewModel: ObservableObject {
             let encodedUser = try Firestore.Encoder().encode(user)
             try await Firestore.firestore().collection("users").document(user.id).setData(encodedUser)
         }
-        catch {
+        catch let error as NSError{
             print("DEBUG: Failed to create user with error \(error.localizedDescription)")
+            throw error
         }
     }
     

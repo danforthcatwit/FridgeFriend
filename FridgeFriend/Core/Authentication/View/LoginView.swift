@@ -10,6 +10,8 @@ import SwiftUI
 struct LoginView: View {
     @State private var email = ""
     @State private var password = ""
+    @State private var showResetPassword = false
+    @State private var errorMessage: String?//hold error message
     @EnvironmentObject var viewModel: AuthViewModel
     
     var body: some View {
@@ -32,17 +34,45 @@ struct LoginView: View {
                               title: "Password",
                               placeholder: "Enter your password",
                               isSecureField: true)
-                    
+                    HStack {
+                        Spacer()
+                        Button {
+                            showResetPassword = true
+                        } label: {
+                            Text("Forgot Password?")
+                                .font(.system(size: 13))
+                                .fontWeight(.semibold)
+                                .foregroundColor(.blue)
+                        }
+                    }
+                    .padding(.horizontal)
                 }
-                
                 .padding(.horizontal)
                 .padding(.top, 12)
+                
+                .sheet(isPresented: $showResetPassword) {
+                    ResetPasswordView().environmentObject(viewModel)
+                }
+                if let errorMessage = errorMessage {
+                    Text(errorMessage)
+                        .foregroundColor(.red)
+                        .font(.system(size:14))
+                        .fontWeight(.semibold)
+                        .padding(.top, 8)
+                        .transition(.opacity)
+                }
                 
                 // sign in button
                 Button {
                     Task {
-                        try await viewModel.signIn(withEmail: email,
-                                                   password: password)
+                        do {
+                            try await viewModel.signIn(withEmail: email,
+                                                       password: password)
+                            errorMessage = nil
+                        } catch {
+                            errorMessage = "Invalid email or password. Please try again."
+                        }
+                        
                     }
                 } label: {
                     HStack {
