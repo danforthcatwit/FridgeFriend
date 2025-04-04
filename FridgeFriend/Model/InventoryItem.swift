@@ -17,6 +17,8 @@ struct InventoryItem: Identifiable, Codable {
     var expiringSoon: Bool
     var isExpired: Bool
     var isWasted: Bool
+    var isArchived: Bool
+    var archivedDate: Date?
     
     // Add an initializer that makes the id parameter optional with a default value of nil
     init(id: String? = nil, name: String, quantity: Int, expirationDate: Date) {
@@ -27,6 +29,8 @@ struct InventoryItem: Identifiable, Codable {
         self.expiringSoon = false
         self.isExpired = false
         self.isWasted = false
+        self.isArchived = false
+        self.archivedDate = nil
     }
     // Equatable
     static func == (lhs: InventoryItem, rhs: InventoryItem) -> Bool {
@@ -44,5 +48,7 @@ struct InventoryItem: Identifiable, Codable {
         case expiringSoon
         case isExpired
         case isWasted
+        case isArchived
+        case archivedDate
     }
 }

@@ -220,19 +220,95 @@ struct HomeView: View {
     // MARK: - Food Waste Section
     private var foodWasteSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Food Waste Summary")
+            Text("Food Waste History")
                 .font(.title3)
                 .fontWeight(.bold)
             
-            // Placeholder for food waste chart
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.secondarySystemBackground))
-                .frame(height: 200)
-                .overlay {
-                    Text("Food waste chart coming soon")
+            if viewModel.wastedItems.isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "leaf.fill")
+                        .font(.system(size: 40))
+                        .foregroundStyle(.green)
+                    
+                    Text("No wasted items")
+                        .font(.headline)
+                    
+                    Text("Great job reducing food waste!")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.green.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            } else {
+                VStack(spacing: 16) {
+                    // Total Items Wasted
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Total Items Wasted")
+                            .font(.headline)
+                            .foregroundStyle(.secondary)
+                        
+                        HStack {
+                            Text("\(viewModel.totalWastedQuantity)")
+                                .font(.system(size: 40, weight: .bold))
+                                .foregroundStyle(.red)
+                            
+                            Text("items")
+                                .font(.title3)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding()
+                    .background(Color(.secondarySystemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    
+                    // List of Wasted Items
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Wasted Items")
+                            .font(.headline)
+                            .foregroundStyle(.secondary)
+                        
+                        ForEach(viewModel.wastedItems) { item in
+                            HStack(spacing: 16) {
+                                // Item icon
+                                Image(systemName: "trash.fill")
+                                    .font(.title2)
+                                    .foregroundStyle(.red)
+                                    .frame(width: 44, height: 44)
+                                    .background(Color.red.opacity(0.1))
+                                    .clipShape(Circle())
+                                
+                                // Item details
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(item.name)
+                                        .font(.headline)
+                                    
+                                    if let archivedDate = item.archivedDate {
+                                        Text("Wasted on \(archivedDate.formatted(date: .abbreviated, time: .omitted))")
+                                            .font(.subheadline)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                                
+                                Spacer()
+                                
+                                // Quantity
+                                Text("\(item.quantity) \(item.quantity == 1 ? "item" : "items")")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .padding()
+                            .background(Color(.secondarySystemBackground))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            
+                            if item.id != viewModel.wastedItems.last?.id {
+                                Divider()
+                            }
+                        }
+                    }
+                }
+            }
         }
         .padding()
         .background(Color(.systemBackground))

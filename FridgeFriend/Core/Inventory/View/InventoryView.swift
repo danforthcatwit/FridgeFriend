@@ -4,6 +4,8 @@ struct InventoryView: View {
     @StateObject var viewModel = InventoryViewModel()
     @State private var itemToEdit: InventoryItem? = nil
     @State private var isPressed: Bool = false
+    @State private var itemToDelete: InventoryItem? = nil
+    @State private var showingDeleteConfirmation = false
     
     var body: some View {
         NavigationView {
@@ -74,7 +76,11 @@ struct InventoryView: View {
                                     }
                                 }
                             }
-                            .onDelete(perform: viewModel.deleteItem)
+                            .onDelete { indexSet in
+                                if let index = indexSet.first {
+                                    deleteItem(viewModel.inventoryItems[index])
+                                }
+                            }
                         }
                         .listStyle(.plain)
                         .refreshable {
@@ -117,6 +123,32 @@ struct InventoryView: View {
                     Text(errorMessage)
                 }
             }
+            .overlay {
+                if showingDeleteConfirmation, let item = itemToDelete {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+                        .overlay {
+                            FoodWasteConfirmationView(
+                                itemName: item.name,
+                                onConfirm: {
+                                    if let index = viewModel.inventoryItems.firstIndex(where: { $0.id == item.id }) {
+                                        viewModel.deleteItem(at: IndexSet(integer: index), isWasted: true)
+                                    }
+                                    showingDeleteConfirmation = false
+                                    itemToDelete = nil
+                                },
+                                onCancel: {
+                                    if let index = viewModel.inventoryItems.firstIndex(where: { $0.id == item.id }) {
+                                        viewModel.deleteItem(at: IndexSet(integer: index), isWasted: false)
+                                    }
+                                    showingDeleteConfirmation = false
+                                    itemToDelete = nil
+                                }
+                            )
+                            .padding()
+                        }
+                }
+            }
         }
     }
 
@@ -134,9 +166,8 @@ struct InventoryView: View {
     
     //Helper function for delete functionality
     private func deleteItem(_ item: InventoryItem) {
-        if let index = viewModel.inventoryItems.firstIndex(where: { $0.id == item.id }) {
-            viewModel.deleteItem(at: IndexSet(integer: index))
-        }
+        itemToDelete = item
+        showingDeleteConfirmation = true
     }
 }
 

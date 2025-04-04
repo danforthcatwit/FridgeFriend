@@ -23,11 +23,11 @@ class InventoryViewModel: ObservableObject {
     private var db = Firestore.firestore()
     private var listenerRegistration: ListenerRegistration?
     
-    //user check
+    /// User check
     private var userID: String?
     
     init() {
-        //checks user id for personal inventory
+        // Checks user id for personal inventory
         if let currentUser = Auth.auth().currentUser {
             self.userID = currentUser.uid
             setupFirestoreListener()
@@ -40,15 +40,16 @@ class InventoryViewModel: ObservableObject {
         listenerRegistration?.remove()
     }
     
+    /// Sets up a Firestore listener to track inventory changes
     func setupFirestoreListener() {
-        //checks for user ID before proceeding
+        // Checks for user ID before proceeding
         guard let userID = userID else {
             errorMessage = "User ID not available"
             return
         }
         
         isLoading = true
-        //path ref change to specific user and a new collection of inventory items
+        // Path ref change to specific user and a new collection of inventory items
         let inventoryRef = db.collection("users").document(userID).collection("inventoryItems")
         
         listenerRegistration = inventoryRef
@@ -68,7 +69,8 @@ class InventoryViewModel: ObservableObject {
                     return
                 }
                 
-                self.inventoryItems = documents.compactMap { document -> InventoryItem? in
+                // First get all items
+                let allItems = documents.compactMap { document -> InventoryItem? in
                     do {
                         var item = try document.data(as: InventoryItem.self)
                         
@@ -119,29 +121,97 @@ class InventoryViewModel: ObservableObject {
                         return nil
                     }
                 }
+                
+                // Filter out archived items in memory
+                self.inventoryItems = allItems.filter { !$0.isArchived }
+                
+                // Schedule grouped notifications
+                let expiringItems = allItems.filter { $0.expiringSoon && !$0.isExpired && !$0.isArchived }
+                let expiredItems = allItems.filter { $0.isExpired && !$0.isArchived }
+                
+                // Schedule notifications for expiring items
+                if !expiringItems.isEmpty {
+                    NotificationManager.shared.scheduleExpiringSoonNotification(for: expiringItems)
+                }
+                
+                // Schedule notifications for expired items
+                if !expiredItems.isEmpty {
+                    NotificationManager.shared.scheduleExpiredNotification(for: expiredItems)
+                }
             }
     }
+    
+    /// Adds a new item to the inventory or updates quantity if item exists
+    /// - Parameter item: The item to add or update
     func addItem(_ item: InventoryItem) {
-        //checks for user ID before proceeding
+        // Checks for user ID before proceeding
         guard let userID = userID else {
             errorMessage = "User ID not available"
             return
         }
-        do {
-            _ = try db.collection("users").document(userID).collection("inventoryItems").addDocument(from: item)
-            showingAddForm = false // Hide the form after successfully adding
-        } catch {
-            errorMessage = "Failed to add item: \(error.localizedDescription)"
-        }
+        
+        // Check if item with same name AND expiration date exists
+        let inventoryRef = db.collection("users").document(userID).collection("inventoryItems")
+        
+        // First, get all items with the same name
+        inventoryRef.whereField("name", isEqualTo: item.name)
+            .whereField("isArchived", isEqualTo: false)
+            .getDocuments { [weak self] (querySnapshot, error) in
+                guard let self = self else { return }
+                
+                if let error = error {
+                    self.errorMessage = "Failed to check for existing items: \(error.localizedDescription)"
+                    return
+                }
+                
+                // Find matching item by comparing dates
+                if let documents = querySnapshot?.documents {
+                    let matchingDocument = documents.first { document in
+                        do {
+                            let existingItem = try document.data(as: InventoryItem.self)
+                            // Compare dates by converting to the same timezone and stripping time components
+                            let calendar = Calendar.current
+                            let existingDate = calendar.startOfDay(for: existingItem.expirationDate)
+                            let newDate = calendar.startOfDay(for: item.expirationDate)
+                            return existingDate == newDate
+                        } catch {
+                            return false
+                        }
+                    }
+                    
+                    if let matchingDocument = matchingDocument {
+                        do {
+                            var existingItem = try matchingDocument.data(as: InventoryItem.self)
+                            existingItem.quantity += item.quantity
+                            
+                            // Update the item in Firestore
+                            try inventoryRef.document(matchingDocument.documentID).setData(from: existingItem)
+                            self.showingAddForm = false
+                        } catch {
+                            self.errorMessage = "Failed to update existing item: \(error.localizedDescription)"
+                        }
+                    } else {
+                        // No matching item exists, add as new item
+                        do {
+                            _ = try inventoryRef.addDocument(from: item)
+                            self.showingAddForm = false
+                        } catch {
+                            self.errorMessage = "Failed to add item: \(error.localizedDescription)"
+                        }
+                    }
+                }
+            }
     }
     
+    /// Updates an existing item in the inventory
+    /// - Parameter item: The item to update
     func updateItem(_ item: InventoryItem) {
-        //checks for user ID before proceeding
+        // Checks for user ID before proceeding
         guard let userID = userID else {
             errorMessage = "User ID not available"
             return
         }
-        //checks for valid item ID
+        // Checks for valid item ID
         guard let id = item.id else {
             errorMessage = "Cannot update item without an ID"
             return
@@ -155,8 +225,12 @@ class InventoryViewModel: ObservableObject {
         }
     }
     
-    func deleteItem(at indexSet: IndexSet) {
-        //checks for user ID before proceeding
+    /// Deletes an item from the inventory or archives it if marked as wasted
+    /// - Parameters:
+    ///   - indexSet: The indices of items to delete
+    ///   - isWasted: Whether the item was wasted
+    func deleteItem(at indexSet: IndexSet, isWasted: Bool = false) {
+        // Checks for user ID before proceeding
         guard let userID = userID else {
             errorMessage = "User ID not available"
             return
@@ -164,17 +238,33 @@ class InventoryViewModel: ObservableObject {
         
         for index in indexSet {
             guard let id = inventoryItems[index].id else { continue }
+            let itemRef = db.collection("users").document(userID).collection("inventoryItems").document(id)
             
-            db.collection("users").document(userID).collection("inventoryItems").document(id).delete { [weak self] error in
-                if let error = error {
-                    self?.errorMessage = "Failed to delete item: \(error.localizedDescription)"
+            if isWasted {
+                // Archive the item instead of deleting it
+                var item = inventoryItems[index]
+                item.isArchived = true
+                item.isWasted = true
+                item.archivedDate = Date()
+                
+                do {
+                    try itemRef.setData(from: item, merge: true)
+                } catch {
+                    errorMessage = "Failed to archive item: \(error.localizedDescription)"
+                }
+            } else {
+                // Delete the item
+                itemRef.delete { [weak self] error in
+                    if let error = error {
+                        self?.errorMessage = "Failed to delete item: \(error.localizedDescription)"
+                    }
                 }
             }
         }
     }
-        
     
-    
+    /// Uses ingredients from a recipe and updates inventory quantities
+    /// - Parameter recipe: The recipe to use
     func useRecipe(_ recipe: Recipe) {
         guard let userID = userID else {
             errorMessage = "User ID not available"
@@ -226,6 +316,7 @@ class InventoryViewModel: ObservableObject {
         }
     }
 
+    /// Fetches suggested recipes based on available ingredients
     func fetchSuggestedRecipes() {
         guard let apiKey = SecretsManager.getAPIKey(for: "SpoonacularAPIKey") else {
             print("DEBUG: Missing Spoonacular API Key")
