@@ -1,5 +1,5 @@
 /*
-See the LICENSE.txt file for this sample’s licensing information.
+See the LICENSE.txt file for this sample's licensing information.
 
 Abstract:
 Presents the initial view and button to capture an image.
@@ -13,50 +13,200 @@ struct ScanReceiptView: View {
     @State private var hasPhoto: Bool = false
     @State private var imageData: Data? = nil
     @State private var showAccessError: Bool = false
-
+    @State private var showIngredientConfirmation: Bool = false
+    @State private var extractedIngredients: [String] = []
+    @StateObject private var inventoryViewModel = InventoryViewModel()
+    
     var body: some View {
-        if showAccessError {
-            VStack {
-                Image(systemName: "lock.trianglebadge.exclamationmark.fill")
-                    .resizable()
-                    .frame(width: 200, height: 200)
-                    .aspectRatio(contentMode: .fit)
-                    .foregroundStyle(.gray)
-
-                Text("This app needs access to the camera for it to function properly. You can update this at:")
-                Text("Settings > Privacy and Security > Camera")
-            }
-        } else {
-            VStack {
-                if hasPhoto {
-                    ImageView(showCamera: $showCamera, imageData: $imageData)
-                } else {
-                    Spacer()
-
-                    Image(systemName: "text.aligncenter")
+        NavigationView {
+            if showAccessError {
+                VStack(spacing: 24) {
+                    Image(systemName: "lock.trianglebadge.exclamationmark.fill")
                         .resizable()
                         .scaledToFit()
-                        .foregroundStyle(.gray)
-                        .opacity(0.50)
-                        .frame(width: 150, height: 150)
-
-                    Spacer()
-
-                    Button("Take a Photo") {
-                        showCamera = true
+                        .frame(width: 100, height: 100)
+                        .foregroundStyle(.red)
+                        .padding(.top, 40)
+                    
+                    VStack(spacing: 16) {
+                        Text("Camera Access Required")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        Text("This app needs access to the camera for it to function properly.")
+                            .font(.body)
+                            .multilineTextAlignment(.center)
+                            .foregroundStyle(.secondary)
+                        
+                        Text("You can update this at:")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        
+                        Text("Settings > Privacy and Security > Camera")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
                     }
-                    .padding()
-                    .font(.title2)
-                    .background(Color.blue)
-                    .foregroundStyle(.white)
-                    .clipShape(Capsule())
-
+                    .padding(.horizontal, 32)
+                    
                     Spacer()
                 }
-            }
-            .fullScreenCover(isPresented: $showCamera) {
-                CameraUI(showCamera: $showCamera, showAccessError: $showAccessError, hasPhoto: $hasPhoto, imageData: $imageData)
+                .navigationTitle("Scan Receipt")
+                .navigationBarTitleDisplayMode(.inline)
+            } else {
+                VStack(spacing: 0) {
+                    if hasPhoto {
+                        ImageView(showCamera: $showCamera, imageData: $imageData, onTextRecognized: { ingredients in
+                            extractedIngredients = ingredients
+                            showIngredientConfirmation = true
+                        })
+                    } else {
+                        Spacer()
+                        
+                        VStack(spacing: 32) {
+                            Image(systemName: "doc.text.viewfinder")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 120, height: 120)
+                                .foregroundStyle(.blue)
+                                .opacity(0.8)
+                            
+                            VStack(spacing: 16) {
+                                Text("Scan Your Receipt")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                
+                                Text("Take a photo of your grocery receipt to automatically add items to your inventory")
+                                    .font(.body)
+                                    .multilineTextAlignment(.center)
+                                    .foregroundStyle(.secondary)
+                                    .padding(.horizontal, 32)
+                            }
+                            
+                            Button(action: { showCamera = true }) {
+                                HStack {
+                                    Image(systemName: "camera.fill")
+                                    Text("Take a Photo")
+                                }
+                                .frame(minWidth: 200)
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.large)
+                            .padding(.top, 16)
+                        }
+                        .padding(.bottom, 40)
+                        
+                        Spacer()
+                    }
+                }
+                .navigationTitle("Scan Receipt")
+                .navigationBarTitleDisplayMode(.inline)
+                .fullScreenCover(isPresented: $showCamera) {
+                    CameraUI(showCamera: $showCamera, showAccessError: $showAccessError, hasPhoto: $hasPhoto, imageData: $imageData)
+                }
+                .sheet(isPresented: $showIngredientConfirmation) {
+                    IngredientConfirmationView(
+                        ingredients: extractedIngredients,
+                        inventoryViewModel: inventoryViewModel
+                    )
+                }
             }
         }
+    }
+}
+
+struct IngredientConfirmationView: View {
+    let ingredients: [String]
+    @ObservedObject var inventoryViewModel: InventoryViewModel
+    @Environment(\.dismiss) private var dismiss
+    @State private var selectedIngredients: Set<String> = []
+    @State private var showingSuccessAlert = false
+    @State private var showingErrorAlert = false
+    @State private var errorMessage = ""
+    
+    var body: some View {
+        NavigationView {
+            List {
+                Section {
+                    ForEach(ingredients, id: \.self) { ingredient in
+                        Button(action: {
+                            if selectedIngredients.contains(ingredient) {
+                                selectedIngredients.remove(ingredient)
+                            } else {
+                                selectedIngredients.insert(ingredient)
+                            }
+                        }) {
+                            HStack {
+                                Text(ingredient)
+                                    .font(.body)
+                                    .foregroundStyle(.primary)
+                                Spacer()
+                                if selectedIngredients.contains(ingredient) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(.blue)
+                                        .imageScale(.large)
+                                }
+                            }
+                        }
+                        .contentShape(Rectangle())
+                    }
+                } header: {
+                    Text("Detected Ingredients")
+                        .textCase(nil)
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                } footer: {
+                    Text("Tap ingredients to select which ones to add to your inventory")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .navigationTitle("Confirm Ingredients")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Add to Inventory") {
+                        addSelectedIngredientsToInventory()
+                    }
+                    .disabled(selectedIngredients.isEmpty)
+                }
+            }
+            .alert("Success", isPresented: $showingSuccessAlert) {
+                Button("OK") { dismiss() }
+            } message: {
+                Text("Ingredients added to inventory successfully")
+            }
+            .alert("Error", isPresented: $showingErrorAlert) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(errorMessage)
+            }
+        }
+    }
+    
+    private func addSelectedIngredientsToInventory() {
+        let selectedIngredientsList = Array(selectedIngredients)
+        
+        // Create inventory items with default expiration date (7 days from now)
+        let expirationDate = Date().addingTimeInterval(86400 * 7)
+        let items = selectedIngredientsList.map { name in
+            InventoryItem(
+                name: name,
+                quantity: 1,
+                expirationDate: expirationDate
+            )
+        }
+        
+        // Add each item to inventory
+        for item in items {
+            inventoryViewModel.addItem(item)
+        }
+        
+        // Show success alert
+        showingSuccessAlert = true
     }
 }
