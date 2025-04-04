@@ -23,7 +23,7 @@ struct Recipe: Identifiable, Codable {
     
     // Custom initializer for Spoonacular API response
     init(from spoonacularRecipe: SpoonacularRecipe) {
-        self.id = nil
+        self.id = String(spoonacularRecipe.id)
         self.userId = nil
         self.title = spoonacularRecipe.title
         self.ingredients = spoonacularRecipe.usedIngredients.map { $0.name }
