@@ -10,7 +10,6 @@
 		0FB705F22D7E5A96004F4801 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 0FB705F12D7E5A96004F4801 /* FirebaseAuth */; };
 		0FB705F62D7E5CC9004F4801 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 0FB705F52D7E5CC9004F4801 /* FirebaseCore */; };
 		0FB705F82D7E6177004F4801 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 0FB705F72D7E6177004F4801 /* FirebaseFirestore */; };
-		0FB77A632D9B63790018B44A /* Secrets.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0FB77A622D9B636C0018B44A /* Secrets.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -34,8 +33,6 @@
 		0F3AEFDB2D6A8342005EEBCA /* FridgeFriend.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FridgeFriend.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0F3AEFEB2D6A8344005EEBCA /* FridgeFriendTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FridgeFriendTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0F3AEFF52D6A8344005EEBCA /* FridgeFriendUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FridgeFriendUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		0FB77A622D9B636C0018B44A /* Secrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Secrets.plist; sourceTree = "<group>"; };
-		856AC63E2D98D83F0082EA9C /* Secrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Secrets.plist; path = FridgeFriend/Secrets.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -100,8 +97,6 @@
 		0F3AEFD22D6A8342005EEBCA = {
 			isa = PBXGroup;
 			children = (
-				0FB77A622D9B636C0018B44A /* Secrets.plist */,
-				856AC63E2D98D83F0082EA9C /* Secrets.plist */,
 				0F3AEFDD2D6A8342005EEBCA /* FridgeFriend */,
 				0F3AEFEE2D6A8344005EEBCA /* FridgeFriendTests */,
 				0F3AEFF82D6A8344005EEBCA /* FridgeFriendUITests */,
@@ -250,7 +245,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0FB77A632D9B63790018B44A /* Secrets.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -436,7 +430,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"FridgeFriend/Preview Content\"";
-				DEVELOPMENT_TEAM = 8H25LXHMUL;
+				DEVELOPMENT_TEAM = 56QHSD39X2;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -469,7 +463,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"FridgeFriend/Preview Content\"";
-				DEVELOPMENT_TEAM = 8H25LXHMUL;
+				DEVELOPMENT_TEAM = 56QHSD39X2;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
