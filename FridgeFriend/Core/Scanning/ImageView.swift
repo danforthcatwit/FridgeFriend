@@ -118,8 +118,10 @@ struct ImageView: View {
             /// Initially perform the request, and then perform the request when changes occur to the request settings.
             .onChange(of: settingChanges, initial: true) {
                 updateRequestSettings()
-                Task {
-                    try await ocr.performOCR(imageData: imageData!)
+                if imageData != nil {
+                    Task {
+                        try await ocr.performOCR(imageData: imageData!)
+                    }
                 }
             }
         }
@@ -147,6 +149,8 @@ struct ImageView: View {
         
         Task {
             do {
+                // Update request settings before performing OCR
+                updateRequestSettings()
                 try await ocr.performOCR(imageData: imageData)
                 
                 // Extract ingredients from OCR results
