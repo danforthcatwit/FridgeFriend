@@ -16,6 +16,7 @@ struct ScanReceiptView: View {
     @State private var showIngredientConfirmation: Bool = false
     @State private var extractedIngredients: [String] = []
     @StateObject private var inventoryViewModel = InventoryViewModel()
+    @State private var showManualInput: Bool = false
     
     var body: some View {
         NavigationView {
@@ -55,7 +56,7 @@ struct ScanReceiptView: View {
             } else {
                 VStack(spacing: 0) {
                     if hasPhoto {
-                        ImageView(showCamera: $showCamera, imageData: $imageData, onTextRecognized: { ingredients in
+                        ImageView(showCamera: $showCamera, imageData: $imageData, hasPhoto: $hasPhoto, onTextRecognized: { ingredients in
                             extractedIngredients = ingredients
                             showIngredientConfirmation = true
                         })
@@ -71,26 +72,38 @@ struct ScanReceiptView: View {
                                 .opacity(0.8)
                             
                             VStack(spacing: 16) {
-                                Text("Scan Your Receipt")
+                                Text("Add to Inventory")
                                     .font(.title2)
                                     .fontWeight(.bold)
                                 
-                                Text("Take a photo of your grocery receipt to automatically add items to your inventory")
+                                Text("Scan your receipt or manually add items to your inventory")
                                     .font(.body)
                                     .multilineTextAlignment(.center)
                                     .foregroundStyle(.secondary)
                                     .padding(.horizontal, 32)
                             }
                             
-                            Button(action: { showCamera = true }) {
-                                HStack {
-                                    Image(systemName: "camera.fill")
-                                    Text("Take a Photo")
+                            VStack(spacing: 16) {
+                                Button(action: { showCamera = true }) {
+                                    HStack {
+                                        Image(systemName: "camera.fill")
+                                        Text("Scan Receipt")
+                                    }
+                                    .frame(minWidth: 200)
                                 }
-                                .frame(minWidth: 200)
+                                .buttonStyle(.borderedProminent)
+                                .controlSize(.large)
+                                
+                                Button(action: { showManualInput = true }) {
+                                    HStack {
+                                        Image(systemName: "square.and.pencil")
+                                        Text("Manual Input")
+                                    }
+                                    .frame(minWidth: 200)
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.large)
                             }
-                            .buttonStyle(.borderedProminent)
-                            .controlSize(.large)
                             .padding(.top, 16)
                         }
                         .padding(.bottom, 40)
@@ -98,10 +111,20 @@ struct ScanReceiptView: View {
                         Spacer()
                     }
                 }
-                .navigationTitle("Scan Receipt")
+                .navigationTitle("Add to Inventory")
                 .navigationBarTitleDisplayMode(.inline)
                 .fullScreenCover(isPresented: $showCamera) {
                     CameraUI(showCamera: $showCamera, showAccessError: $showAccessError, hasPhoto: $hasPhoto, imageData: $imageData)
+                }
+                .onChange(of: showCamera) { newValue in
+                    // If camera is dismissed and we have a photo, keep showing the image view
+                    // Otherwise, reset the state
+                    if !newValue && !hasPhoto {
+                        imageData = nil
+                    }
+                }
+                .sheet(isPresented: $showManualInput) {
+                    ManualIngredientInputView(inventoryViewModel: inventoryViewModel)
                 }
                 .sheet(isPresented: $showIngredientConfirmation) {
                     IngredientConfirmationView(
