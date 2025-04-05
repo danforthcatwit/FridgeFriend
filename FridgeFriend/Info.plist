@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>SpoonacularAPIKey</key>
+	<string>95db128f419d44df8aacbd9c64636e0c</string>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIImageName</key>

@@ -14,9 +14,11 @@ struct RecipeDetailView: View {
     @ObservedObject var inventoryViewModel: InventoryViewModel
     @State private var showingUseRecipeError = false
     @State private var errorMessage: String?
-    @State private var showingAlert = false
     @State private var showingConfirmation = false
     @State private var confirmationMessage: String?
+    @State private var hasCheckedIngredients = false
+    @State private var canUseRecipe = false
+    @State private var isProcessingRecipe = false
 
     var body: some View {
         ScrollView {
@@ -154,26 +156,65 @@ struct RecipeDetailView: View {
                 }
                 .padding(.horizontal)
                 
-                Button(action: {
-                    inventoryViewModel.useRecipe(recipe)
-                    if inventoryViewModel.outOfStockIngredients.isEmpty {
+                VStack(spacing: 12) {
+                    // Check Ingredients Button
+                    Button(action: {
+                        guard !isProcessingRecipe else { return }
+                        isProcessingRecipe = true
+                        inventoryViewModel.checkRecipeIngredients(recipe)
+                        hasCheckedIngredients = true
+                        canUseRecipe = inventoryViewModel.outOfStockIngredients.isEmpty
+                        isProcessingRecipe = false
+                    }) {
+                        HStack {
+                            Image(systemName: "checklist")
+                            Text("Check Ingredients")
+                        }
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity, minHeight: 50)
+                        .background(Color.blue)
+                        .cornerRadius(12)
+                    }
+                    .padding(.horizontal)
+                    .disabled(isProcessingRecipe)
+                    
+                    // Use Recipe Button
+                    Button(action: {
+                        guard !isProcessingRecipe else { return }
+                        isProcessingRecipe = true
+                        inventoryViewModel.useRecipe(recipe)
                         confirmationMessage = "Successfully used recipe. Ingredients updated."
                         showingConfirmation = true
-                    } else {
-                        showingAlert = true
+                        isProcessingRecipe = false
+                    }) {
+                        HStack {
+                            Image(systemName: "cart.fill")
+                            Text("Use Recipe")
+                        }
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity, minHeight: 50)
+                        .background(canUseRecipe ? Color.accentColor : Color.gray)
+                        .cornerRadius(12)
                     }
-                }) {
-                    HStack {
-                        Image(systemName: "cart.fill")
-                        Text("Use Recipe")
+                    .padding(.horizontal)
+                    .disabled(!canUseRecipe || isProcessingRecipe)
+                    
+                    if hasCheckedIngredients {
+                        if canUseRecipe {
+                            Text("✅ You have all required ingredients!")
+                                .foregroundColor(.green)
+                                .font(.subheadline)
+                                .padding(.horizontal)
+                        } else {
+                            Text("❌ Missing some ingredients")
+                                .foregroundColor(.red)
+                                .font(.subheadline)
+                                .padding(.horizontal)
+                        }
                     }
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity, minHeight: 50)
-                    .background(Color.accentColor)
-                    .cornerRadius(12)
                 }
-                .padding(.horizontal)
                 .padding(.top, 20)
             }
             .padding(.vertical, 20)
@@ -184,58 +225,32 @@ struct RecipeDetailView: View {
         } message: {
             Text(errorMessage ?? "Unknown error")
         }
-        .alert("Out of Stock", isPresented: $showingAlert) {
-            Button("OK", role: .cancel) { }
+        .alert("Missing Ingredients", isPresented: $inventoryViewModel.showingMissingIngredientsAlert) {
+            Button("Add to Inventory", role: .none) {
+                inventoryViewModel.addMissingIngredientsToInventory()
+                // Update canUseRecipe based on current state
+                canUseRecipe = inventoryViewModel.outOfStockIngredients.isEmpty
+            }
+            Button("Cancel", role: .cancel) { }
         } message: {
-            Text("You're missing: \(inventoryViewModel.outOfStockIngredients.joined(separator: ", "))")
+            Text(missingIngredientsMessage)
         }
         .alert("Recipe Used", isPresented: $showingConfirmation) {
-            Button("OK", role: .cancel) { }
+            Button("OK", role: .cancel) {
+                // Reset states after successful use
+                hasCheckedIngredients = false
+                canUseRecipe = false
+            }
         } message: {
             Text(confirmationMessage ?? "Ingredients updated.")
         }
     }
 
-    // Function to update inventory
-    func useRecipe() {
-        guard let userID = Auth.auth().currentUser?.uid else {
-            errorMessage = "User not logged in"
-            showingUseRecipeError = true
-            return
+    private var missingIngredientsMessage: String {
+        let missingItems = inventoryViewModel.outOfStockIngredients.map { ingredient in
+            let missing = ingredient.required - ingredient.available
+            return "\(ingredient.name): need \(missing) more (have \(ingredient.available))"
         }
-
-        let inventoryRef = Firestore.firestore().collection("users").document(userID).collection("inventoryItems")
-
-        var usedIngredients: [String] = []
-
-        for ingredient in recipe.ingredients {
-            inventoryRef.whereField("name", isEqualTo: ingredient).getDocuments { snapshot, error in
-                if let error = error {
-                    print("Error fetching inventory item: \(error)")
-                    return
-                }
-
-                guard let document = snapshot?.documents.first else {
-                    print("Ingredient \(ingredient) not found in inventory")
-                    return
-                }
-
-                let item = try? document.data(as: InventoryItem.self)
-                if var item = item, item.quantity > 0 {
-                    item.quantity -= 1 // Reduce quantity by 1
-                    usedIngredients.append("\(ingredient) (-1)")
-                    do {
-                        try inventoryRef.document(document.documentID).setData(from: item)
-                    } catch {
-                        print("Error updating ingredient: \(error)")
-                    }
-                }
-            }
-        }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { // Ensure updates reflect in UI
-            confirmationMessage = "Used: \(usedIngredients.joined(separator: ", "))"
-            showingConfirmation = true
-        }
+        return "You're missing these ingredients:\n\n" + missingItems.joined(separator: "\n")
     }
 }

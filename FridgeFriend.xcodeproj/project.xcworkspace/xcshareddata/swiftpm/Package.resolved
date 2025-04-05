@@ -1,5 +1,5 @@
 {
-  "originHash" : "c63c63846d9c539229e96de38d6af51417e28c0ee9a0bc48bd0f0f19d923c329",
+  "originHash" : "bb6d05f4426d1ba5ff8404a697a9c0e0d1213b46f57a9de8246c72caa806b0b9",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -17,6 +17,24 @@
       "state" : {
         "revision" : "61b85103a1aeed8218f17c794687781505fbbef5",
         "version" : "11.2.0"
+      }
+    },
+    {
+      "identity" : "cryptoswift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/krzyzanowskim/CryptoSwift.git",
+      "state" : {
+        "revision" : "729e01bc9b9dab466ac85f21fb9ee2bc1c61b258",
+        "version" : "1.8.4"
+      }
+    },
+    {
+      "identity" : "fatsecretswift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/NicholasBellucci/FatSecretSwift.git",
+      "state" : {
+        "revision" : "3bd0b8b3fc1c88a96aa4d8b582563a85f9259e24",
+        "version" : "0.1.0"
       }
     },
     {

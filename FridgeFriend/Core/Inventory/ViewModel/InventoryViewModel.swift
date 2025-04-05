@@ -17,8 +17,9 @@ class InventoryViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var showingAddForm = false
     @Published var showingEditForm = false
-    @Published var outOfStockIngredients: [String] = []
+    @Published var outOfStockIngredients: [(name: String, required: Int, available: Int)] = []
     @Published var suggestedRecipes: [Recipe] = []
+    @Published var showingMissingIngredientsAlert = false
     
     private var db = Firestore.firestore()
     private var listenerRegistration: ListenerRegistration?
@@ -150,11 +151,15 @@ class InventoryViewModel: ObservableObject {
             return
         }
         
+        // Create a copy of the item with lowercase name
+        var lowercaseItem = item
+        lowercaseItem.name = item.name.lowercased()
+        
         // Check if item with same name AND expiration date exists
         let inventoryRef = db.collection("users").document(userID).collection("inventoryItems")
         
         // First, get all items with the same name
-        inventoryRef.whereField("name", isEqualTo: item.name)
+        inventoryRef.whereField("name", isEqualTo: lowercaseItem.name)
             .whereField("isArchived", isEqualTo: false)
             .getDocuments { [weak self] (querySnapshot, error) in
                 guard let self = self else { return }
@@ -172,7 +177,7 @@ class InventoryViewModel: ObservableObject {
                             // Compare dates by converting to the same timezone and stripping time components
                             let calendar = Calendar.current
                             let existingDate = calendar.startOfDay(for: existingItem.expirationDate)
-                            let newDate = calendar.startOfDay(for: item.expirationDate)
+                            let newDate = calendar.startOfDay(for: lowercaseItem.expirationDate)
                             return existingDate == newDate
                         } catch {
                             return false
@@ -182,7 +187,7 @@ class InventoryViewModel: ObservableObject {
                     if let matchingDocument = matchingDocument {
                         do {
                             var existingItem = try matchingDocument.data(as: InventoryItem.self)
-                            existingItem.quantity += item.quantity
+                            existingItem.quantity += lowercaseItem.quantity
                             
                             // Update the item in Firestore
                             try inventoryRef.document(matchingDocument.documentID).setData(from: existingItem)
@@ -193,7 +198,7 @@ class InventoryViewModel: ObservableObject {
                     } else {
                         // No matching item exists, add as new item
                         do {
-                            _ = try inventoryRef.addDocument(from: item)
+                            _ = try inventoryRef.addDocument(from: lowercaseItem)
                             self.showingAddForm = false
                         } catch {
                             self.errorMessage = "Failed to add item: \(error.localizedDescription)"
@@ -263,18 +268,21 @@ class InventoryViewModel: ObservableObject {
         }
     }
     
-    /// Uses ingredients from a recipe and updates inventory quantities
-    /// - Parameter recipe: The recipe to use
-    func useRecipe(_ recipe: Recipe) {
+    /// Checks if all ingredients for a recipe are available without updating quantities
+    func checkRecipeIngredients(_ recipe: Recipe) {
         guard let userID = userID else {
             errorMessage = "User ID not available"
             return
         }
 
         outOfStockIngredients.removeAll() // Reset list before checking
+        showingMissingIngredientsAlert = false // Reset alert state
 
         let inventoryRef = db.collection("users").document(userID).collection("inventoryItems")
+        let dispatchGroup = DispatchGroup()
+        var missingIngredients: [(name: String, required: Int, available: Int)] = []
 
+        // First check the main ingredients
         for ingredientEntry in recipe.ingredients {
             let components = ingredientEntry.split(separator: "-").map { $0.trimmingCharacters(in: .whitespaces) }
             
@@ -283,37 +291,238 @@ class InventoryViewModel: ObservableObject {
                 continue
             }
 
-            inventoryRef.whereField("name", isEqualTo: ingredientName).getDocuments { snapshot, error in
-                if let error = error {
-                    print("Error fetching inventory item: \(error)")
-                    return
-                }
+            // Convert ingredient name to lowercase for case-insensitive comparison
+            let lowercaseIngredientName = ingredientName.lowercased()
 
-                guard let document = snapshot?.documents.first else {
-                    DispatchQueue.main.async {
-                        self.outOfStockIngredients.append(ingredientName) // Add missing ingredient
+            dispatchGroup.enter()
+            
+            // Query for items with case-insensitive name match
+            inventoryRef
+                .whereField("name", isGreaterThanOrEqualTo: lowercaseIngredientName)
+                .whereField("name", isLessThanOrEqualTo: lowercaseIngredientName + "\u{f8ff}")
+                .getDocuments { snapshot, error in
+                    defer { dispatchGroup.leave() }
+                    
+                    if let error = error {
+                        print("Error fetching inventory item: \(error)")
+                        return
                     }
-                    print("Ingredient \(ingredientName) not found in inventory")
-                    return
-                }
 
-                do {
-                    var item = try document.data(as: InventoryItem.self)
+                    guard let document = snapshot?.documents.first else {
+                        // Add missing ingredient with required quantity and 0 available
+                        missingIngredients.append((
+                            name: String(ingredientName),
+                            required: Int(requiredQuantity),
+                            available: 0
+                        ))
+                        print("Ingredient \(ingredientName) not found in inventory")
+                        return
+                    }
 
-                    if item.quantity >= Int(requiredQuantity) {
-                        item.quantity -= Int(requiredQuantity)
-                        try inventoryRef.document(document.documentID).setData(from: item)
-                    } else {
-                        DispatchQueue.main.async {
-                            self.outOfStockIngredients.append(ingredientName) // Track if out of stock
+                    do {
+                        let item = try document.data(as: InventoryItem.self)
+
+                        if item.quantity < Int(requiredQuantity) {
+                            // Add to missing ingredients with required and available quantities
+                            missingIngredients.append((
+                                name: String(ingredientName),
+                                required: Int(requiredQuantity),
+                                available: item.quantity
+                            ))
+                            print("Not enough \(ingredientName). Required: \(requiredQuantity), Available: \(item.quantity)")
                         }
-                        print("Not enough \(ingredientName). Required: \(requiredQuantity), Available: \(item.quantity)")
+                    } catch {
+                        print("Error checking ingredient: \(error)")
                     }
-                } catch {
-                    print("Error updating ingredient: \(error)")
+                }
+        }
+
+        // Then check the missed ingredients from Spoonacular
+        if let missedIngredients = recipe.missedIngredients {
+            for ingredientName in missedIngredients {
+                dispatchGroup.enter()
+                
+                // Convert ingredient name to lowercase for case-insensitive comparison
+                let lowercaseIngredientName = ingredientName.lowercased()
+
+                // Query for items with case-insensitive name match
+                inventoryRef
+                    .whereField("name", isGreaterThanOrEqualTo: lowercaseIngredientName)
+                    .whereField("name", isLessThanOrEqualTo: lowercaseIngredientName + "\u{f8ff}")
+                    .getDocuments { snapshot, error in
+                        defer { dispatchGroup.leave() }
+                        
+                        if let error = error {
+                            print("Error fetching inventory item: \(error)")
+                            return
+                        }
+
+                        guard let document = snapshot?.documents.first else {
+                            // Add missing ingredient with required quantity and 0 available
+                            missingIngredients.append((
+                                name: String(ingredientName),
+                                required: 1, // Default to 1 for missed ingredients
+                                available: 0
+                            ))
+                            print("Missing ingredient \(ingredientName) not found in inventory")
+                            return
+                        }
+
+                        do {
+                            let item = try document.data(as: InventoryItem.self)
+
+                            if item.quantity < 1 { // Default to 1 for missed ingredients
+                                // Add to missing ingredients with required and available quantities
+                                missingIngredients.append((
+                                    name: String(ingredientName),
+                                    required: 1,
+                                    available: item.quantity
+                                ))
+                                print("Not enough \(ingredientName). Required: 1, Available: \(item.quantity)")
+                            }
+                        } catch {
+                            print("Error checking ingredient: \(error)")
+                        }
+                    }
+            }
+        }
+
+        dispatchGroup.notify(queue: .main) {
+            self.outOfStockIngredients = missingIngredients
+            if !missingIngredients.isEmpty {
+                // Only show alert if we have missing ingredients and it's not already showing
+                if !self.showingMissingIngredientsAlert {
+                    self.showingMissingIngredientsAlert = true
                 }
             }
         }
+    }
+
+    /// Uses ingredients from a recipe and updates inventory quantities
+    /// - Parameter recipe: The recipe to use
+    func useRecipe(_ recipe: Recipe) {
+        guard let userID = userID else {
+            errorMessage = "User ID not available"
+            return
+        }
+
+        let inventoryRef = db.collection("users").document(userID).collection("inventoryItems")
+
+        if recipe.isSpoonacularRecipe {
+            // Handle Spoonacular recipes
+            for ingredientName in recipe.ingredients {
+                // Convert ingredient name to lowercase for case-insensitive comparison
+                let lowercaseIngredientName = ingredientName.lowercased()
+
+                // Query for items with case-insensitive name match
+                inventoryRef
+                    .whereField("name", isGreaterThanOrEqualTo: lowercaseIngredientName)
+                    .whereField("name", isLessThanOrEqualTo: lowercaseIngredientName + "\u{f8ff}")
+                    .getDocuments { snapshot, error in
+                        if let error = error {
+                            print("Error fetching inventory item: \(error)")
+                            return
+                        }
+
+                        guard let document = snapshot?.documents.first else {
+                            print("Ingredient \(ingredientName) not found in inventory")
+                            return
+                        }
+
+                        do {
+                            var item = try document.data(as: InventoryItem.self)
+                            item.quantity -= 1 // Default to using 1 unit for Spoonacular ingredients
+                            
+                            // If quantity is 0, delete the item
+                            if item.quantity == 0 {
+                                inventoryRef.document(document.documentID).delete { error in
+                                    if let error = error {
+                                        print("Error deleting empty item: \(error)")
+                                    } else {
+                                        print("Successfully deleted empty item: \(ingredientName)")
+                                    }
+                                }
+                            } else {
+                                // Otherwise update the quantity
+                                try inventoryRef.document(document.documentID).setData(from: item)
+                            }
+                        } catch {
+                            print("Error updating ingredient: \(error)")
+                        }
+                    }
+            }
+        } else {
+            // Handle custom recipes
+            for ingredientEntry in recipe.ingredients {
+                let components = ingredientEntry.split(separator: "-").map { $0.trimmingCharacters(in: .whitespaces) }
+                
+                guard components.count == 2, let ingredientName = components.first, let requiredQuantity = Double(components.last ?? "0") else {
+                    print("Invalid ingredient format: \(ingredientEntry)")
+                    continue
+                }
+
+                // Convert ingredient name to lowercase for case-insensitive comparison
+                let lowercaseIngredientName = ingredientName.lowercased()
+
+                // Query for items with case-insensitive name match
+                inventoryRef
+                    .whereField("name", isGreaterThanOrEqualTo: lowercaseIngredientName)
+                    .whereField("name", isLessThanOrEqualTo: lowercaseIngredientName + "\u{f8ff}")
+                    .getDocuments { snapshot, error in
+                        if let error = error {
+                            print("Error fetching inventory item: \(error)")
+                            return
+                        }
+
+                        guard let document = snapshot?.documents.first else {
+                            print("Ingredient \(ingredientName) not found in inventory")
+                            return
+                        }
+
+                        do {
+                            var item = try document.data(as: InventoryItem.self)
+                            item.quantity -= Int(requiredQuantity)
+                            
+                            // If quantity is 0, delete the item
+                            if item.quantity == 0 {
+                                inventoryRef.document(document.documentID).delete { error in
+                                    if let error = error {
+                                        print("Error deleting empty item: \(error)")
+                                    } else {
+                                        print("Successfully deleted empty item: \(ingredientName)")
+                                    }
+                                }
+                            } else {
+                                // Otherwise update the quantity
+                                try inventoryRef.document(document.documentID).setData(from: item)
+                            }
+                        } catch {
+                            print("Error updating ingredient: \(error)")
+                        }
+                    }
+            }
+        }
+    }
+
+    /// Adds missing ingredients to inventory with default expiration date
+    func addMissingIngredientsToInventory() {
+        let calendar = Calendar.current
+        let defaultExpirationDate = calendar.date(byAdding: .day, value: 7, to: Date()) ?? Date()
+        
+        for ingredient in outOfStockIngredients {
+            let missingQuantity = ingredient.required - ingredient.available
+            if missingQuantity > 0 {
+                let newItem = InventoryItem(
+                    name: ingredient.name.lowercased(),
+                    quantity: missingQuantity,
+                    expirationDate: defaultExpirationDate
+                )
+                addItem(newItem)
+            }
+        }
+        
+        outOfStockIngredients.removeAll()
+        showingMissingIngredientsAlert = false
     }
 
     /// Fetches suggested recipes based on available ingredients
@@ -347,7 +556,7 @@ class InventoryViewModel: ObservableObject {
         // First, get recipes that can be made with only our ingredients
         let urlString = "https://api.spoonacular.com/recipes/findByIngredients?ingredients=\(availableIngredients)&number=20&ranking=1&ignorePantry=true&apiKey=\(apiKey)"
         
-        print("DEBUG: Making request to Spoonacular API")
+        print("DEBUG: Making request to Spoonacular API with URL: \(urlString)")
         
         guard let url = URL(string: urlString) else {
             print("DEBUG: Invalid URL for Spoonacular API")
@@ -359,16 +568,31 @@ class InventoryViewModel: ObservableObject {
         URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
             DispatchQueue.main.async {
                 self?.isLoading = false
+                
                 if let error = error {
                     print("DEBUG: API request failed with error: \(error.localizedDescription)")
                     self?.errorMessage = "Failed to fetch recipes: \(error.localizedDescription)"
                     return
                 }
 
+                if let httpResponse = response as? HTTPURLResponse {
+                    print("DEBUG: HTTP Status Code: \(httpResponse.statusCode)")
+                    if httpResponse.statusCode != 200 {
+                        print("DEBUG: Non-200 status code received")
+                        self?.errorMessage = "API request failed with status code: \(httpResponse.statusCode)"
+                        return
+                    }
+                }
+
                 guard let data = data else {
                     print("DEBUG: No data received from Spoonacular API")
                     self?.errorMessage = "No data received from Spoonacular API"
                     return
+                }
+
+                // Print the raw response for debugging
+                if let jsonString = String(data: data, encoding: .utf8) {
+                    print("DEBUG: Raw API Response: \(jsonString)")
                 }
 
                 do {
@@ -405,10 +629,82 @@ class InventoryViewModel: ObservableObject {
                     self?.suggestedRecipes = uniqueRecipes
                     print("DEBUG: Final unique recipes count: \(uniqueRecipes.count)")
                 } catch {
-                    print("DEBUG: Failed to decode recipes: \(error.localizedDescription)")
+                    print("DEBUG: Failed to decode recipes. Error: \(error)")
+                    print("DEBUG: Error description: \(error.localizedDescription)")
+                    if let decodingError = error as? DecodingError {
+                        switch decodingError {
+                        case .dataCorrupted(let context):
+                            print("DEBUG: Data corrupted: \(context.debugDescription)")
+                        case .keyNotFound(let key, let context):
+                            print("DEBUG: Key not found: \(key.stringValue) in \(context.debugDescription)")
+                        case .typeMismatch(let type, let context):
+                            print("DEBUG: Type mismatch: expected \(type) in \(context.debugDescription)")
+                        case .valueNotFound(let type, let context):
+                            print("DEBUG: Value not found: expected \(type) in \(context.debugDescription)")
+                        @unknown default:
+                            print("DEBUG: Unknown decoding error")
+                        }
+                    }
                     self?.errorMessage = "Failed to decode recipes: \(error.localizedDescription)"
                 }
             }
         }.resume()
+    }
+
+    /// Updates the quantity of an ingredient without checking availability
+    func updateIngredientQuantity(_ ingredientEntry: String) {
+        guard let userID = userID else {
+            errorMessage = "User ID not available"
+            return
+        }
+
+        let components = ingredientEntry.split(separator: "-").map { $0.trimmingCharacters(in: .whitespaces) }
+        
+        guard components.count == 2, let ingredientName = components.first, let requiredQuantity = Double(components.last ?? "0") else {
+            print("Invalid ingredient format: \(ingredientEntry)")
+            return
+        }
+
+        // Convert ingredient name to lowercase for case-insensitive comparison
+        let lowercaseIngredientName = ingredientName.lowercased()
+
+        let inventoryRef = db.collection("users").document(userID).collection("inventoryItems")
+        
+        // Query for items with case-insensitive name match
+        inventoryRef
+            .whereField("name", isGreaterThanOrEqualTo: lowercaseIngredientName)
+            .whereField("name", isLessThanOrEqualTo: lowercaseIngredientName + "\u{f8ff}")
+            .getDocuments { snapshot, error in
+                if let error = error {
+                    print("Error fetching inventory item: \(error)")
+                    return
+                }
+
+                guard let document = snapshot?.documents.first else {
+                    print("Ingredient \(ingredientName) not found in inventory")
+                    return
+                }
+
+                do {
+                    var item = try document.data(as: InventoryItem.self)
+                    item.quantity -= Int(requiredQuantity)
+                    
+                    // If quantity is 0, delete the item
+                    if item.quantity == 0 {
+                        inventoryRef.document(document.documentID).delete { error in
+                            if let error = error {
+                                print("Error deleting empty item: \(error)")
+                            } else {
+                                print("Successfully deleted empty item: \(ingredientName)")
+                            }
+                        }
+                    } else {
+                        // Otherwise update the quantity
+                        try inventoryRef.document(document.documentID).setData(from: item)
+                    }
+                } catch {
+                    print("Error updating ingredient: \(error)")
+                }
+            }
     }
 }

@@ -73,7 +73,7 @@ struct Recipe: Identifiable, Codable {
 struct SpoonacularRecipe: Codable {
     let id: Int
     let title: String
-    let image: String
+    let image: String?
     let usedIngredientCount: Int
     let missedIngredientCount: Int
     let usedIngredients: [SpoonacularIngredient]
@@ -84,12 +84,12 @@ struct SpoonacularIngredient: Codable {
     let id: Int
     let name: String
     let amount: Double
-    let unit: String
-    let unitLong: String
-    let unitShort: String
-    let aisle: String
-    let original: String
-    let originalName: String
-    let meta: [String]
+    let unit: String?
+    let unitLong: String?
+    let unitShort: String?
+    let aisle: String?
+    let original: String?
+    let originalName: String?
+    let meta: [String]?
     let image: String?
 }
