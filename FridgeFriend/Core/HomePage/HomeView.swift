@@ -107,9 +107,7 @@ struct HomeView: View {
     
     // MARK: - Suggest Recipes Button
     private var suggestRecipesButton: some View {
-        Button(action: {
-            // TODO: Implement recipe suggestion action
-        }) {
+        NavigationLink(destination: RecipeView(initialTab: 1)) {
             HStack(spacing: 12) {
                 Image(systemName: "fork.knife.circle.fill")
                     .font(.title2)
