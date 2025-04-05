@@ -12,7 +12,13 @@ struct RecipeView: View {
     @StateObject private var inventoryViewModel = InventoryViewModel()
     @State private var showingAddRecipe = false
     @State private var selectedRecipe: Recipe?
-    @State private var selectedTab = 0 // 0 for custom recipes, 1 for suggested recipes
+    @State private var selectedTab: Int
+    let initialTab: Int
+    
+    init(initialTab: Int = 0) {
+        self.initialTab = initialTab
+        _selectedTab = State(initialValue: initialTab)
+    }
 
     var body: some View {
         NavigationView {
@@ -85,9 +91,10 @@ struct RecipeView: View {
                     }
                 }
             }
-            .onAppear {
+            .task {
+                // Load both custom and suggested recipes when the view appears
                 recipeService.fetchUserRecipes()
-                inventoryViewModel.fetchSuggestedRecipes() // Fetch suggested recipes based on inventory
+                inventoryViewModel.fetchSuggestedRecipes()
             }
             .sheet(isPresented: $showingAddRecipe) {
                 AddRecipeView()
