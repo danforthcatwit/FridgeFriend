@@ -35,7 +35,7 @@ struct RecipeView: View {
                 if selectedTab == 0 {
                     // Custom Recipes
                     List {
-                        ForEach(recipeService.recipes) { recipe in
+                        ForEach(recipeService.recipes, id: \.uniqueIdentifier) { recipe in
                             Button(action: {
                                 selectedRecipe = recipe
                             }) {
@@ -62,7 +62,7 @@ struct RecipeView: View {
                 } else {
                     // Suggested Recipes
                     List {
-                        ForEach(inventoryViewModel.suggestedRecipes) { recipe in
+                        ForEach(inventoryViewModel.suggestedRecipes, id: \.uniqueIdentifier) { recipe in
                             Button(action: {
                                 selectedRecipe = recipe
                             }) {

@@ -382,7 +382,9 @@ class InventoryViewModel: ObservableObject {
                     // First, add recipes that can be made with only our ingredients (missedIngredientCount = 0)
                     for recipe in spoonacularRecipes {
                         if recipe.missedIngredientCount == 0 && !seenIds.contains(recipe.id) {
-                            uniqueRecipes.append(Recipe(from: recipe))
+                            // Create recipe without storing in Firebase
+                            let newRecipe = Recipe(from: recipe)
+                            uniqueRecipes.append(newRecipe)
                             seenIds.insert(recipe.id)
                         }
                     }
@@ -390,7 +392,9 @@ class InventoryViewModel: ObservableObject {
                     // Then, add recipes that require additional ingredients
                     for recipe in spoonacularRecipes {
                         if recipe.missedIngredientCount > 0 && !seenIds.contains(recipe.id) {
-                            uniqueRecipes.append(Recipe(from: recipe))
+                            // Create recipe without storing in Firebase
+                            let newRecipe = Recipe(from: recipe)
+                            uniqueRecipes.append(newRecipe)
                             seenIds.insert(recipe.id)
                         }
                     }

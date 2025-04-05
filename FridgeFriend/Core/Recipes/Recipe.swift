@@ -23,7 +23,7 @@ struct Recipe: Identifiable, Codable {
     
     // Custom initializer for Spoonacular API response
     init(from spoonacularRecipe: SpoonacularRecipe) {
-        self.id = String(spoonacularRecipe.id)
+        self.id = nil  // No Firebase ID for Spoonacular recipes
         self.userId = nil
         self.title = spoonacularRecipe.title
         self.ingredients = spoonacularRecipe.usedIngredients.map { $0.name }
@@ -33,12 +33,12 @@ struct Recipe: Identifiable, Codable {
         self.usedIngredientCount = spoonacularRecipe.usedIngredientCount
         self.missedIngredientCount = spoonacularRecipe.missedIngredientCount
         self.missedIngredients = spoonacularRecipe.missedIngredients.map { $0.name }
-        self.spoonacularId = spoonacularRecipe.id
+        self.spoonacularId = spoonacularRecipe.id  // Store the Spoonacular ID for reference
     }
     
     // Regular initializer for custom recipes
     init(userId: String, title: String, ingredients: [String], instructions: String, timeToCook: Double) {
-        self.id = nil
+        self.id = nil  // Let Firestore manage the document ID
         self.userId = userId
         self.title = title
         self.ingredients = ingredients
@@ -48,7 +48,24 @@ struct Recipe: Identifiable, Codable {
         self.usedIngredientCount = nil
         self.missedIngredientCount = nil
         self.missedIngredients = nil
-        self.spoonacularId = nil
+        self.spoonacularId = nil  // Custom recipes don't have a Spoonacular ID
+    }
+    
+    // Helper property to determine if this is a Spoonacular recipe
+    var isSpoonacularRecipe: Bool {
+        return spoonacularId != nil
+    }
+    
+    // Computed property to provide a consistent identifier for both custom and Spoonacular recipes
+    var uniqueIdentifier: String {
+        if let firebaseId = id {
+            return "custom-\(firebaseId)"
+        } else if let spoonId = spoonacularId {
+            return "spoon-\(spoonId)"
+        } else {
+            // Fallback to a UUID if somehow both are nil
+            return UUID().uuidString
+        }
     }
 }
 
