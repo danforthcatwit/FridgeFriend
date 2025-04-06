@@ -167,7 +167,6 @@ struct RecipeDetailView: View {
                         isProcessingRecipe = true
                         inventoryViewModel.checkRecipeIngredients(recipe)
                         hasCheckedIngredients = true
-                        canUseRecipe = inventoryViewModel.outOfStockIngredients.isEmpty
                         isProcessingRecipe = false
                     }) {
                         HStack {
@@ -234,8 +233,15 @@ struct RecipeDetailView: View {
                 inventoryViewModel.addMissingIngredientsToInventory()
                 // Update canUseRecipe based on current state
                 canUseRecipe = inventoryViewModel.outOfStockIngredients.isEmpty
+                
+                canUseRecipe = true
+                hasCheckedIngredients = true
             }
-            Button("Cancel", role: .cancel) { }
+            //cant use recipe without accepting missing ingredients
+            Button("Cancel", role: .cancel) {
+                canUseRecipe = false
+                hasCheckedIngredients = false
+            }
         } message: {
             Text(missingIngredientsMessage)
         }

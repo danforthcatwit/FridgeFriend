@@ -32,7 +32,8 @@ struct Recipe: Identifiable, Codable {
         // Store ingredient quantities in a dictionary
         var quantities: [String: Double] = [:]
         for ingredient in spoonacularRecipe.usedIngredients {
-            quantities[ingredient.name] = ingredient.amount
+            var intQuantity = ceil(ingredient.amount)
+            quantities[ingredient.name] = intQuantity//lets see if we gfet the right numbers
         }
         self.ingredientQuantities = quantities
         

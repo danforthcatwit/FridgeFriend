@@ -32,18 +32,7 @@ struct HomeView: View {
             }
             .navigationTitle("FridgeFriend")
             .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(action: {}) {
-                        Image(systemName: "bell.fill")
-                            .font(.headline)
-                            .foregroundStyle(.blue)
-                    }
-                }
-            }
-            .refreshable {
-                viewModel.fetchExpiringItems()
-            }
+
         }
     }
     
