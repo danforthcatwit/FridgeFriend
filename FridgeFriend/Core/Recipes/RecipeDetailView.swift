@@ -69,34 +69,70 @@ struct RecipeDetailView: View {
                         .fontWeight(.semibold)
                         .padding(.horizontal)
                     
-                    if !recipe.ingredients.isEmpty {
+                    if !recipe.ingredients.isEmpty || (recipe.missedIngredients != nil && !recipe.missedIngredients!.isEmpty) {
                         VStack(alignment: .leading, spacing: 12) {
-                            if let usedCount = recipe.usedIngredientCount {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundColor(.green)
-                                    Text("From Your Inventory (\(usedCount))")
-                                        .font(.headline)
-                                        .foregroundColor(.green)
-                                }
-                                .padding(.bottom, 4)
-                            }
-                            
+                            // Show a single list of all ingredients
                             ForEach(recipe.ingredients, id: \.self) { ingredient in
                                 HStack(alignment: .top, spacing: 12) {
                                     Image(systemName: "circle.fill")
                                         .font(.system(size: 6))
                                         .foregroundColor(.secondary)
                                         .padding(.top, 8)
-                                    Text(ingredient)
-                                        .font(.body)
-                                        .fixedSize(horizontal: false, vertical: true)
+                                    
+                                    if recipe.isSpoonacularRecipe {
+                                        // For Spoonacular recipes, show the quantity from ingredientQuantities
+                                        if let quantity = recipe.ingredientQuantities?[ingredient] {
+                                            Text("\(ingredient) - \(quantity, specifier: "%.1f")")
+                                                .font(.body)
+                                                .fixedSize(horizontal: false, vertical: true)
+                                        } else {
+                                            Text(ingredient)
+                                                .font(.body)
+                                                .fixedSize(horizontal: false, vertical: true)
+                                        }
+                                    } else {
+                                        // For custom recipes, the quantity is already in the ingredient string
+                                        Text(ingredient)
+                                            .font(.body)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }
                                 }
                                 .frame(minHeight: 44)
                             }
+                            
+                            // Add missed ingredients to the same list
+                            if let missedIngredients = recipe.missedIngredients, !missedIngredients.isEmpty {
+                                ForEach(missedIngredients, id: \.self) { ingredient in
+                                    HStack(alignment: .top, spacing: 12) {
+                                        Image(systemName: "circle.fill")
+                                            .font(.system(size: 6))
+                                            .foregroundColor(.secondary)
+                                            .padding(.top, 8)
+                                        
+                                        if recipe.isSpoonacularRecipe {
+                                            // For Spoonacular recipes, show the quantity from ingredientQuantities
+                                            if let quantity = recipe.ingredientQuantities?[ingredient] {
+                                                Text("\(ingredient) - \(quantity, specifier: "%.1f")")
+                                                    .font(.body)
+                                                    .fixedSize(horizontal: false, vertical: true)
+                                            } else {
+                                                Text(ingredient)
+                                                    .font(.body)
+                                                    .fixedSize(horizontal: false, vertical: true)
+                                            }
+                                        } else {
+                                            // For custom recipes, the quantity is already in the ingredient string
+                                            Text(ingredient)
+                                                .font(.body)
+                                                .fixedSize(horizontal: false, vertical: true)
+                                        }
+                                    }
+                                    .frame(minHeight: 44)
+                                }
+                            }
                         }
                         .padding(16)
-                        .background(Color(.systemGreen).opacity(0.1))
+                        .background(Color(.systemGray6))
                         .cornerRadius(12)
                         .padding(.horizontal)
                     } else {
@@ -104,38 +140,6 @@ struct RecipeDetailView: View {
                             .font(.body)
                             .foregroundColor(.secondary)
                             .padding(.horizontal)
-                    }
-                    
-                    if let missedCount = recipe.missedIngredientCount,
-                       let missedIngredients = recipe.missedIngredients,
-                       !missedIngredients.isEmpty {
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack(spacing: 8) {
-                                Image(systemName: "exclamationmark.circle.fill")
-                                    .foregroundColor(.red)
-                                Text("Missing Ingredients (\(missedCount))")
-                                    .font(.headline)
-                                    .foregroundColor(.red)
-                            }
-                            .padding(.bottom, 4)
-                            
-                            ForEach(missedIngredients, id: \.self) { ingredient in
-                                HStack(alignment: .top, spacing: 12) {
-                                    Image(systemName: "circle.fill")
-                                        .font(.system(size: 6))
-                                        .foregroundColor(.secondary)
-                                        .padding(.top, 8)
-                                    Text(ingredient)
-                                        .font(.body)
-                                        .fixedSize(horizontal: false, vertical: true)
-                                }
-                                .frame(minHeight: 44)
-                            }
-                        }
-                        .padding(16)
-                        .background(Color(.systemRed).opacity(0.1))
-                        .cornerRadius(12)
-                        .padding(.horizontal)
                     }
                 }
                 

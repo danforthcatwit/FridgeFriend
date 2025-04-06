@@ -13,6 +13,7 @@ struct Recipe: Identifiable, Codable {
     var userId: String?
     var title: String
     var ingredients: [String]
+    var ingredientQuantities: [String: Double]?
     var instructions: String?
     var timeToCook: Double
     var imageURL: String?
@@ -27,6 +28,14 @@ struct Recipe: Identifiable, Codable {
         self.userId = nil
         self.title = spoonacularRecipe.title
         self.ingredients = spoonacularRecipe.usedIngredients.map { $0.name }
+        
+        // Store ingredient quantities in a dictionary
+        var quantities: [String: Double] = [:]
+        for ingredient in spoonacularRecipe.usedIngredients {
+            quantities[ingredient.name] = ingredient.amount
+        }
+        self.ingredientQuantities = quantities
+        
         self.instructions = nil
         self.timeToCook = 0.0 // Default value since Spoonacular doesn't provide this in search results
         self.imageURL = spoonacularRecipe.image
@@ -42,6 +51,7 @@ struct Recipe: Identifiable, Codable {
         self.userId = userId
         self.title = title
         self.ingredients = ingredients
+        self.ingredientQuantities = nil // Custom recipes don't need this as quantities are in the ingredient strings
         self.instructions = instructions
         self.timeToCook = timeToCook
         self.imageURL = nil

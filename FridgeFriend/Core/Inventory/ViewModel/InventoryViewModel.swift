@@ -286,9 +286,21 @@ class InventoryViewModel: ObservableObject {
         for ingredientEntry in recipe.ingredients {
             let components = ingredientEntry.split(separator: "-").map { $0.trimmingCharacters(in: .whitespaces) }
             
-            guard components.count == 2, let ingredientName = components.first, let requiredQuantity = Double(components.last ?? "0") else {
-                print("Invalid ingredient format: \(ingredientEntry)")
-                continue
+            // For custom recipes, parse the quantity from the ingredient string
+            // For Spoonacular recipes, get the quantity from ingredientQuantities
+            let ingredientName: String
+            let requiredQuantity: Double
+            
+            if recipe.isSpoonacularRecipe {
+                ingredientName = ingredientEntry
+                requiredQuantity = recipe.ingredientQuantities?[ingredientEntry] ?? 1.0
+            } else {
+                guard components.count == 2, let name = components.first, let quantity = Double(components.last ?? "0") else {
+                    print("Invalid ingredient format: \(ingredientEntry)")
+                    continue
+                }
+                ingredientName = name
+                requiredQuantity = quantity
             }
 
             // Convert ingredient name to lowercase for case-insensitive comparison
@@ -344,6 +356,9 @@ class InventoryViewModel: ObservableObject {
                 
                 // Convert ingredient name to lowercase for case-insensitive comparison
                 let lowercaseIngredientName = ingredientName.lowercased()
+                
+                // Get the quantity from ingredientQuantities if available, otherwise default to 1
+                let requiredQuantity = recipe.ingredientQuantities?[ingredientName] ?? 1.0
 
                 // Query for items with case-insensitive name match
                 inventoryRef
@@ -361,7 +376,7 @@ class InventoryViewModel: ObservableObject {
                             // Add missing ingredient with required quantity and 0 available
                             missingIngredients.append((
                                 name: String(ingredientName),
-                                required: 1, // Default to 1 for missed ingredients
+                                required: Int(requiredQuantity),
                                 available: 0
                             ))
                             print("Missing ingredient \(ingredientName) not found in inventory")
@@ -371,14 +386,14 @@ class InventoryViewModel: ObservableObject {
                         do {
                             let item = try document.data(as: InventoryItem.self)
 
-                            if item.quantity < 1 { // Default to 1 for missed ingredients
+                            if item.quantity < Int(requiredQuantity) {
                                 // Add to missing ingredients with required and available quantities
                                 missingIngredients.append((
                                     name: String(ingredientName),
-                                    required: 1,
+                                    required: Int(requiredQuantity),
                                     available: item.quantity
                                 ))
-                                print("Not enough \(ingredientName). Required: 1, Available: \(item.quantity)")
+                                print("Not enough \(ingredientName). Required: \(requiredQuantity), Available: \(item.quantity)")
                             }
                         } catch {
                             print("Error checking ingredient: \(error)")
@@ -413,6 +428,9 @@ class InventoryViewModel: ObservableObject {
             for ingredientName in recipe.ingredients {
                 // Convert ingredient name to lowercase for case-insensitive comparison
                 let lowercaseIngredientName = ingredientName.lowercased()
+                
+                // Get the quantity from ingredientQuantities if available, otherwise default to 1
+                let quantityToUse = recipe.ingredientQuantities?[ingredientName] ?? 1.0
 
                 // Query for items with case-insensitive name match
                 inventoryRef
@@ -431,7 +449,7 @@ class InventoryViewModel: ObservableObject {
 
                         do {
                             var item = try document.data(as: InventoryItem.self)
-                            item.quantity -= 1 // Default to using 1 unit for Spoonacular ingredients
+                            item.quantity -= Int(quantityToUse) // Use the actual quantity from Spoonacular
                             
                             // If quantity is 0, delete the item
                             if item.quantity == 0 {
