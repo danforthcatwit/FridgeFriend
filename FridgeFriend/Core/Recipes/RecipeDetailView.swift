@@ -52,14 +52,7 @@ struct RecipeDetailView: View {
                     Text(recipe.title)
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(.primary)
-                    
-                    HStack {
-                        Image(systemName: "clock.fill")
-                            .foregroundColor(.secondary)
-                        Text("\(recipe.timeToCook, specifier: "%.0f") minutes")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                    }
+
                 }
                 .padding(.horizontal)
                 
@@ -163,11 +156,7 @@ struct RecipeDetailView: View {
                 VStack(spacing: 12) {
                     // Check Ingredients Button
                     Button(action: {
-                        guard !isProcessingRecipe else { return }
-                        isProcessingRecipe = true
-                        inventoryViewModel.checkRecipeIngredients(recipe)
-                        hasCheckedIngredients = true
-                        isProcessingRecipe = false
+                        checkIngredients()
                     }) {
                         HStack {
                             Image(systemName: "checklist")
@@ -184,12 +173,7 @@ struct RecipeDetailView: View {
                     
                     // Use Recipe Button
                     Button(action: {
-                        guard !isProcessingRecipe else { return }
-                        isProcessingRecipe = true
-                        inventoryViewModel.useRecipe(recipe)
-                        confirmationMessage = "Successfully used recipe. Ingredients updated."
-                        showingConfirmation = true
-                        isProcessingRecipe = false
+                        useRecipe()
                     }) {
                         HStack {
                             Image(systemName: "cart.fill")
@@ -232,15 +216,11 @@ struct RecipeDetailView: View {
             Button("Add to Inventory", role: .none) {
                 inventoryViewModel.addMissingIngredientsToInventory()
                 // Update canUseRecipe based on current state
-                canUseRecipe = inventoryViewModel.outOfStockIngredients.isEmpty
-                
-                canUseRecipe = true
-                hasCheckedIngredients = true
+                verifyIngredientAvailability()
             }
             //cant use recipe without accepting missing ingredients
             Button("Cancel", role: .cancel) {
                 canUseRecipe = false
-                hasCheckedIngredients = false
             }
         } message: {
             Text(missingIngredientsMessage)
@@ -262,5 +242,38 @@ struct RecipeDetailView: View {
             return "\(ingredient.name): need \(missing) more (have \(ingredient.available))"
         }
         return "You're missing these ingredients:\n\n" + missingItems.joined(separator: "\n")
+    }
+    
+    private func checkIngredients() {
+        guard !isProcessingRecipe else { return}
+        
+        isProcessingRecipe = true
+        inventoryViewModel.checkRecipeIngredients(recipe)
+        hasCheckedIngredients = true
+        
+        if !inventoryViewModel.showingMissingIngredientsAlert {
+            verifyIngredientAvailability()
+        }
+        isProcessingRecipe = false
+    }
+    
+    private func verifyIngredientAvailability() {
+        canUseRecipe = inventoryViewModel.outOfStockIngredients.isEmpty
+    }
+    
+    private func useRecipe() {
+        guard hasCheckedIngredients && canUseRecipe && !isProcessingRecipe else { return }
+        
+        isProcessingRecipe = true
+        
+        do {
+            try inventoryViewModel.useRecipe(recipe)
+            confirmationMessage = "Successfully used recipe. Inventory updated"
+            showingConfirmation = true
+        } catch let error {
+            errorMessage = error.localizedDescription
+            showingUseRecipeError = true
+        }
+        isProcessingRecipe = false
     }
 }

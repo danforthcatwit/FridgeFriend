@@ -308,10 +308,11 @@ class InventoryViewModel: ObservableObject {
 
             dispatchGroup.enter()
             
-            // Query for items with case-insensitive name match
+            // Query for items with case-insensitive name match and not archived
             inventoryRef
                 .whereField("name", isGreaterThanOrEqualTo: lowercaseIngredientName)
                 .whereField("name", isLessThanOrEqualTo: lowercaseIngredientName + "\u{f8ff}")
+                .whereField("isArchived", isEqualTo: false)
                 .getDocuments { snapshot, error in
                     defer { dispatchGroup.leave() }
                     
@@ -360,10 +361,11 @@ class InventoryViewModel: ObservableObject {
                 // Get the quantity from ingredientQuantities if available, otherwise default to 1
                 let requiredQuantity = recipe.ingredientQuantities?[ingredientName] ?? 1.0
 
-                // Query for items with case-insensitive name match
+                // Query for items with case-insensitive name match and not archived
                 inventoryRef
                     .whereField("name", isGreaterThanOrEqualTo: lowercaseIngredientName)
                     .whereField("name", isLessThanOrEqualTo: lowercaseIngredientName + "\u{f8ff}")
+                    .whereField("isArchived", isEqualTo: false)
                     .getDocuments { snapshot, error in
                         defer { dispatchGroup.leave() }
                         
@@ -422,21 +424,28 @@ class InventoryViewModel: ObservableObject {
         }
 
         let inventoryRef = db.collection("users").document(userID).collection("inventoryItems")
+        let dispatchGroup = DispatchGroup()
 
         if recipe.isSpoonacularRecipe {
             // Handle Spoonacular recipes
+            // First process used ingredients
             for ingredientName in recipe.ingredients {
+                dispatchGroup.enter()
+                
                 // Convert ingredient name to lowercase for case-insensitive comparison
                 let lowercaseIngredientName = ingredientName.lowercased()
                 
                 // Get the quantity from ingredientQuantities if available, otherwise default to 1
                 let quantityToUse = recipe.ingredientQuantities?[ingredientName] ?? 1.0
 
-                // Query for items with case-insensitive name match
+                // Query for items with case-insensitive name match and not archived
                 inventoryRef
                     .whereField("name", isGreaterThanOrEqualTo: lowercaseIngredientName)
                     .whereField("name", isLessThanOrEqualTo: lowercaseIngredientName + "\u{f8ff}")
+                    .whereField("isArchived", isEqualTo: false)
                     .getDocuments { snapshot, error in
+                        defer { dispatchGroup.leave() }
+                        
                         if let error = error {
                             print("Error fetching inventory item: \(error)")
                             return
@@ -469,24 +478,78 @@ class InventoryViewModel: ObservableObject {
                         }
                     }
             }
+
+            // Then process missed ingredients that were added
+            if let missedIngredients = recipe.missedIngredients {
+                for ingredientName in missedIngredients {
+                    dispatchGroup.enter()
+                    
+                    let lowercaseIngredientName = ingredientName.lowercased()
+                    let quantityToUse = recipe.ingredientQuantities?[ingredientName] ?? 1.0
+
+                    // Query for items with case-insensitive name match and not archived
+                    inventoryRef
+                        .whereField("name", isGreaterThanOrEqualTo: lowercaseIngredientName)
+                        .whereField("name", isLessThanOrEqualTo: lowercaseIngredientName + "\u{f8ff}")
+                        .whereField("isArchived", isEqualTo: false)
+                        .getDocuments { snapshot, error in
+                            defer { dispatchGroup.leave() }
+                            
+                            if let error = error {
+                                print("Error fetching inventory item: \(error)")
+                                return
+                            }
+
+                            guard let document = snapshot?.documents.first else {
+                                print("Ingredient \(ingredientName) not found in inventory")
+                                return
+                            }
+
+                            do {
+                                var item = try document.data(as: InventoryItem.self)
+                                item.quantity -= Int(quantityToUse)
+                                
+                                if item.quantity == 0 {
+                                    inventoryRef.document(document.documentID).delete { error in
+                                        if let error = error {
+                                            print("Error deleting empty item: \(error)")
+                                        } else {
+                                            print("Successfully deleted empty item: \(ingredientName)")
+                                        }
+                                    }
+                                } else {
+                                    try inventoryRef.document(document.documentID).setData(from: item)
+                                }
+                            } catch {
+                                print("Error updating ingredient: \(error)")
+                            }
+                        }
+                }
+            }
         } else {
             // Handle custom recipes
             for ingredientEntry in recipe.ingredients {
+                dispatchGroup.enter()
+                
                 let components = ingredientEntry.split(separator: "-").map { $0.trimmingCharacters(in: .whitespaces) }
                 
                 guard components.count == 2, let ingredientName = components.first, let requiredQuantity = Double(components.last ?? "0") else {
                     print("Invalid ingredient format: \(ingredientEntry)")
+                    dispatchGroup.leave()
                     continue
                 }
 
                 // Convert ingredient name to lowercase for case-insensitive comparison
                 let lowercaseIngredientName = ingredientName.lowercased()
 
-                // Query for items with case-insensitive name match
+                // Query for items with case-insensitive name match and not archived
                 inventoryRef
                     .whereField("name", isGreaterThanOrEqualTo: lowercaseIngredientName)
                     .whereField("name", isLessThanOrEqualTo: lowercaseIngredientName + "\u{f8ff}")
+                    .whereField("isArchived", isEqualTo: false)
                     .getDocuments { snapshot, error in
+                        defer { dispatchGroup.leave() }
+                        
                         if let error = error {
                             print("Error fetching inventory item: \(error)")
                             return
@@ -501,7 +564,6 @@ class InventoryViewModel: ObservableObject {
                             var item = try document.data(as: InventoryItem.self)
                             item.quantity -= Int(requiredQuantity)
                             
-                            // If quantity is 0, delete the item
                             if item.quantity == 0 {
                                 inventoryRef.document(document.documentID).delete { error in
                                     if let error = error {
@@ -511,7 +573,6 @@ class InventoryViewModel: ObservableObject {
                                     }
                                 }
                             } else {
-                                // Otherwise update the quantity
                                 try inventoryRef.document(document.documentID).setData(from: item)
                             }
                         } catch {
@@ -519,6 +580,11 @@ class InventoryViewModel: ObservableObject {
                         }
                     }
             }
+        }
+
+        dispatchGroup.notify(queue: .main) {
+            // All inventory updates are complete
+            print("Recipe usage complete - all ingredients updated")
         }
     }
 

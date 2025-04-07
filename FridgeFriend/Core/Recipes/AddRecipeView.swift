@@ -111,34 +111,7 @@ struct AddRecipeView: View {
                     .padding(.horizontal)
                     
                     // Cooking Time Section
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Cooking Time")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                        
-                        HStack {
-                            Text("\(Int(timeToCook)) minutes")
-                                .font(.body)
-                            
-                            Spacer()
-                            
-                            HStack(spacing: 20) {
-                                Button(action: { if timeToCook > 0 { timeToCook -= 5 } }) {
-                                    Image(systemName: "minus.circle.fill")
-                                        .font(.title2)
-                                }
-                                .frame(width: 44, height: 44)
-                                
-                                Button(action: { timeToCook += 5 }) {
-                                    Image(systemName: "plus.circle.fill")
-                                        .font(.title2)
-                                }
-                                .frame(width: 44, height: 44)
-                            }
-                            .foregroundColor(.blue)
-                        }
-                    }
-                    .padding(.horizontal)
+
                     
                     // Save Button
                     Button(action: saveRecipe) {

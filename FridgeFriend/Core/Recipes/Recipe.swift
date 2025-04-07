@@ -29,16 +29,23 @@ struct Recipe: Identifiable, Codable {
         self.title = spoonacularRecipe.title
         self.ingredients = spoonacularRecipe.usedIngredients.map { $0.name }
         
-        // Store ingredient quantities in a dictionary
+        // Store ingredient quantities in a dictionary for both used and missed ingredients
         var quantities: [String: Double] = [:]
+        
+        // Add quantities for used ingredients
         for ingredient in spoonacularRecipe.usedIngredients {
-            var intQuantity = ceil(ingredient.amount)
-            quantities[ingredient.name] = intQuantity//lets see if we gfet the right numbers
+            quantities[ingredient.name] = ingredient.amount
         }
+        
+        // Add quantities for missed ingredients
+        for ingredient in spoonacularRecipe.missedIngredients {
+            quantities[ingredient.name] = ingredient.amount
+        }
+        
         self.ingredientQuantities = quantities
         
         self.instructions = nil
-        self.timeToCook = 0.0 // Default value since Spoonacular doesn't provide this in search results
+        self.timeToCook = 0.0 // removed time to cook visually since API doesnt have cook time
         self.imageURL = spoonacularRecipe.image
         self.usedIngredientCount = spoonacularRecipe.usedIngredientCount
         self.missedIngredientCount = spoonacularRecipe.missedIngredientCount

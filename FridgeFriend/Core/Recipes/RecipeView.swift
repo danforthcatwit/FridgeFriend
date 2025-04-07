@@ -42,8 +42,6 @@ struct RecipeView: View {
                                 VStack(alignment: .leading) {
                                     Text(recipe.title)
                                         .font(.headline)
-                                    Text("Time to Cook: \(recipe.timeToCook, specifier: "%.1f") min")
-                                        .font(.subheadline)
                                 }
                             }
                             .buttonStyle(PlainButtonStyle())
@@ -69,8 +67,7 @@ struct RecipeView: View {
                                 VStack(alignment: .leading) {
                                     Text(recipe.title)
                                         .font(.headline)
-                                    Text("Time to Cook: \(recipe.timeToCook, specifier: "%.1f") min")
-                                        .font(.subheadline)
+                                    
                                 }
                             }
                             .buttonStyle(PlainButtonStyle())
