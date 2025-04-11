@@ -2,7 +2,7 @@
 
 ## Table of Contents:
 - [About the Project](#about-the-project)
-- [Functional Requirements](#funtional-requirements)
+- [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Getting Started](#getting-started)
 - [Usage](#usage)
@@ -18,34 +18,44 @@
 
 # Functional Requirements:
 ### 1. User Authentication:
-
+  - Code: [FridgeFriend/Core/Authentication](./FrideFriend/Core/Authentication)
+  - Uses FirebaseAuth for secure account creation, sign-in, and password reset.
 
 ### 2. User Password Reset:
-
+  - Code:
+  - What it does
 
 ### 3. Receipt Scanning:
-
+  - Code:
+  - What it does
 
 ### 4. Manually Input Receipt:
-
+  - Code:
+  - What it does
 
 ### 5. Food Inventory Management:
-
+  - Code:
+  - What it does
 
 ### 6. Custom Recipe Saving:
-
+  - Code:
+  - What it does
 
 ### 7. Recipe Suggestions:
-
+  - Code:
+  - What it does
 
 ### 8. Recipe Usage:
-
+  - Code:
+  - What it does
 
 ### 9. Expiration Date Notifications:
-
+  - Code:
+  - What it does
 
 ### 10. Food Waste Tracking:
-
+  - Code:
+  - What it does
 
 # Tech Stack:
 ### Frameworks/libraries/tools used in the project:
