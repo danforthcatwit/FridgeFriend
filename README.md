@@ -18,7 +18,7 @@
 
 # Functional Requirements:
 ### 1. User Authentication:
-  - Code: [FridgeFriend/Core/Authentication](./FrideFriend/Core/Authentication)
+  - Code: [FridgeFriend/Core/Authentication](./FridgeFriend/Core/Authentication/)
   - Uses FirebaseAuth for secure account creation, sign-in, and password reset.
 
 ### 2. User Password Reset:
