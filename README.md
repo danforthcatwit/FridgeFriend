@@ -1,4 +1,4 @@
-# Fridge Friend
+# Fridge Friend <br/> <img src="FridgeFriend/Assets.xcassets/image.imageset/image.png">
 
 ## Table of Contents:
 - 💡[About the Project](#about-the-project)
