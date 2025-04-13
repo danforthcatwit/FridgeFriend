@@ -178,7 +178,36 @@ Fridge Friend is an iOS application designed to help users manage their food inv
     •Asset Catalog (managing app resources)
 
 # 🔧Getting Started:
--Instructions to set up project locally
+
+## Prerequisites
+- Xcode 15.0 or later
+- iOS 11.0 or later
+- A Mac computer running macOS Ventura or later
+
+## Installation Steps
+
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/danforthcatwit/FridgeFriend.git
+   cd FridgeFriend
+   ```
+
+2. **Open the Project**
+   - Open `FridgeFriend.xcodeproj` in Xcode
+   - Wait for Xcode to index the project
+
+3. **Configure the Project**
+   - The project is already configured with necessary API keys in the project
+   - No additional setup is required for Firebase or other services
+
+4. **Build and Run**
+   - Select your target device (simulator or physical device)
+   - Press ⌘R or click the Run button in Xcode
+
+## Development Notes
+- The project uses SwiftUI
+- All API keys are temporarily stored in the project for grading purposes
+- The app is designed to work with iOS 11.0 or later
 
 # 📖Usage:
 How to run application
