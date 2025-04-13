@@ -57,6 +57,7 @@ class AuthViewModel: ObservableObject {
             let user = User(id: result.user.uid, name: name, email: email)
             let encodedUser = try Firestore.Encoder().encode(user)
             try await Firestore.firestore().collection("users").document(user.id).setData(encodedUser)
+            await fetchUserData()
         }
         catch let error as NSError{
             print("DEBUG: Failed to create user with error \(error.localizedDescription)")
@@ -78,7 +79,27 @@ class AuthViewModel: ObservableObject {
     
     //TODO 
     func deleteUser() {
+        guard let user = Auth.auth().currentUser else { return }
         
+        // Delete user data from Firestore first
+        let db = Firestore.firestore()
+        db.collection("users").document(user.uid).delete { error in
+            if let error = error {
+                print("DEBUG: Failed to delete user data with error \(error.localizedDescription)")
+                return
+            }
+            
+            // Then delete the user from Firebase Auth
+            user.delete { error in
+                if let error = error {
+                    print("DEBUG: Failed to delete user with error \(error.localizedDescription)")
+                    return
+                }
+                
+                // Finally, sign out and clear local state
+                self.signOut()
+            }
+        }
     }
     //fetches cached user data in Firestore
     func fetchUserData() async {
