@@ -1,16 +1,16 @@
 # Fridge Friend
 
 ## Table of Contents:
-- [About the Project](#about-the-project)
+- 💡[About the Project](#about-the-project)
 - 🚀[Features](#features)
 - 🛠[Tech Stack](#tech-stack)
 - 🔧[Getting Started](#getting-started)
 - 📖[Usage](#usage)
 - 📂[Project Structure](#project-structure)
-- [Future Improvements](#future-improvements)
-- [Contributors](#contributors)
+- 🌟[Future Improvements](#future-improvements)
+- 📖[Contributors](#contributors)
 
-# About the Project:
+# 💡About the Project:
 -What the Project Does
 
 -The goal or motivation behind the project
@@ -240,7 +240,7 @@ How to run application
   └─Info.plist
 </code></pre>
 
-# Future Improvements:
+# 🌟Future Improvements:
 
 #### Inventory: 
     Auto-Complete Feature:
@@ -261,5 +261,5 @@ How to run application
     •Notifications are currently being sent as local notifications that are scheduled to push at 9 am every day when you have an 
     item expiring soon and or an expired item in inventory.
 
-# Contributors:
+# 📖Contributors:
 James Kourkoutas | Colin Danforth | Denis Le | Timmy Tran
