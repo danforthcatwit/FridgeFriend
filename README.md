@@ -209,11 +209,6 @@ Fridge Friend is an iOS application designed to help users manage their food inv
 - All API keys are temporarily stored in the project for grading purposes
 - The app is designed to work with iOS 11.0 or later
 
-# 📖Usage:
-How to run application
--ex apple dev id 
--firebase access
-
 # 📂Project Structure:
 <pre><code>
   FridgeFriend/ 
