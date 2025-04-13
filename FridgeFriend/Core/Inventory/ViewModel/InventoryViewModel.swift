@@ -436,7 +436,7 @@ class InventoryViewModel: ObservableObject {
                 let lowercaseIngredientName = ingredientName.lowercased()
                 
                 // Get the quantity from ingredientQuantities if available, otherwise default to 1
-                let quantityToUse = recipe.ingredientQuantities?[ingredientName] ?? 1.0
+                let quantityToUse = ceil(recipe.ingredientQuantities?[ingredientName] ?? 1.0) // Round up to nearest whole number
 
                 // Query for items with case-insensitive name match and not archived
                 inventoryRef
