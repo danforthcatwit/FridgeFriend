@@ -23,7 +23,7 @@ struct Recipe: Identifiable, Codable {
     var spoonacularId: Int?
     
     // Custom initializer for Spoonacular API response
-    init(from spoonacularRecipe: SpoonacularRecipe) {
+    init(from spoonacularRecipe: SpoonacularRecipe, detailedRecipe: SpoonacularRecipeDetail? = nil) {
         self.id = nil  // No Firebase ID for Spoonacular recipes
         self.userId = nil
         self.title = spoonacularRecipe.title
@@ -44,7 +44,22 @@ struct Recipe: Identifiable, Codable {
         
         self.ingredientQuantities = quantities
         
-        self.instructions = nil
+        // Set instructions from detailed recipe if available
+        if let detailedRecipe = detailedRecipe {
+            if let analyzedInstructions = detailedRecipe.analyzedInstructions?.first {
+                // Format instructions with step numbers
+                self.instructions = analyzedInstructions.steps
+                    .map { "\($0.number). \($0.step)" }
+                    .joined(separator: "\n\n")
+            } else if let instructions = detailedRecipe.instructions {
+                self.instructions = instructions
+            } else {
+                self.instructions = nil
+            }
+        } else {
+            self.instructions = nil
+        }
+        
         self.timeToCook = 0.0 // removed time to cook visually since API doesnt have cook time
         self.imageURL = spoonacularRecipe.image
         self.usedIngredientCount = spoonacularRecipe.usedIngredientCount
@@ -96,6 +111,24 @@ struct SpoonacularRecipe: Codable {
     let missedIngredientCount: Int
     let usedIngredients: [SpoonacularIngredient]
     let missedIngredients: [SpoonacularIngredient]
+}
+
+struct SpoonacularRecipeDetail: Codable {
+    let id: Int
+    let title: String
+    let image: String?
+    let instructions: String?
+    let analyzedInstructions: [AnalyzedInstruction]?
+}
+
+struct AnalyzedInstruction: Codable {
+    let name: String
+    let steps: [Step]
+}
+
+struct Step: Codable {
+    let number: Int
+    let step: String
 }
 
 struct SpoonacularIngredient: Codable {

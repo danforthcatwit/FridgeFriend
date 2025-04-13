@@ -674,11 +674,6 @@ class InventoryViewModel: ObservableObject {
                     return
                 }
 
-                // Print the raw response for debugging
-                if let jsonString = String(data: data, encoding: .utf8) {
-                    print("DEBUG: Raw API Response: \(jsonString)")
-                }
-
                 do {
                     let spoonacularRecipes = try JSONDecoder().decode([SpoonacularRecipe].self, from: data)
                     print("DEBUG: Successfully decoded \(spoonacularRecipes.count) recipes")
@@ -687,31 +682,43 @@ class InventoryViewModel: ObservableObject {
                     var uniqueRecipes: [Recipe] = []
                     var seenIds = Set<Int>()
                     
+                    // Create a dispatch group to handle multiple API calls
+                    let group = DispatchGroup()
+                    
                     // First, add recipes that can be made with only our ingredients (missedIngredientCount = 0)
                     for recipe in spoonacularRecipes {
                         if recipe.missedIngredientCount == 0 && !seenIds.contains(recipe.id) {
-                            // Create recipe without storing in Firebase
-                            let newRecipe = Recipe(from: recipe)
-                            uniqueRecipes.append(newRecipe)
-                            seenIds.insert(recipe.id)
+                            group.enter()
+                            self?.fetchRecipeDetails(recipeId: recipe.id, apiKey: apiKey) { detailedRecipe in
+                                let newRecipe = Recipe(from: recipe, detailedRecipe: detailedRecipe)
+                                uniqueRecipes.append(newRecipe)
+                                seenIds.insert(recipe.id)
+                                group.leave()
+                            }
                         }
                     }
                     
                     // Then, add recipes that require additional ingredients
                     for recipe in spoonacularRecipes {
                         if recipe.missedIngredientCount > 0 && !seenIds.contains(recipe.id) {
-                            // Create recipe without storing in Firebase
-                            let newRecipe = Recipe(from: recipe)
-                            uniqueRecipes.append(newRecipe)
-                            seenIds.insert(recipe.id)
+                            group.enter()
+                            self?.fetchRecipeDetails(recipeId: recipe.id, apiKey: apiKey) { detailedRecipe in
+                                let newRecipe = Recipe(from: recipe, detailedRecipe: detailedRecipe)
+                                uniqueRecipes.append(newRecipe)
+                                seenIds.insert(recipe.id)
+                                group.leave()
+                            }
                         }
                     }
                     
-                    // Sort recipes by usedIngredientCount (descending) to show recipes that use more of our ingredients first
-                    uniqueRecipes.sort { ($0.usedIngredientCount ?? 0) > ($1.usedIngredientCount ?? 0) }
-                    
-                    self?.suggestedRecipes = uniqueRecipes
-                    print("DEBUG: Final unique recipes count: \(uniqueRecipes.count)")
+                    // Wait for all API calls to complete
+                    group.notify(queue: .main) {
+                        // Sort recipes by usedIngredientCount (descending) to show recipes that use more of our ingredients first
+                        uniqueRecipes.sort { ($0.usedIngredientCount ?? 0) > ($1.usedIngredientCount ?? 0) }
+                        
+                        self?.suggestedRecipes = uniqueRecipes
+                        print("DEBUG: Final unique recipes count: \(uniqueRecipes.count)")
+                    }
                 } catch {
                     print("DEBUG: Failed to decode recipes. Error: \(error)")
                     print("DEBUG: Error description: \(error.localizedDescription)")
@@ -731,6 +738,39 @@ class InventoryViewModel: ObservableObject {
                     }
                     self?.errorMessage = "Failed to decode recipes: \(error.localizedDescription)"
                 }
+            }
+        }.resume()
+    }
+    
+    /// Fetches detailed recipe information from Spoonacular API
+    private func fetchRecipeDetails(recipeId: Int, apiKey: String, completion: @escaping (SpoonacularRecipeDetail?) -> Void) {
+        let urlString = "https://api.spoonacular.com/recipes/\(recipeId)/information?apiKey=\(apiKey)"
+        
+        guard let url = URL(string: urlString) else {
+            print("DEBUG: Invalid URL for recipe details")
+            completion(nil)
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                print("DEBUG: Failed to fetch recipe details: \(error.localizedDescription)")
+                completion(nil)
+                return
+            }
+            
+            guard let data = data else {
+                print("DEBUG: No data received for recipe details")
+                completion(nil)
+                return
+            }
+            
+            do {
+                let detailedRecipe = try JSONDecoder().decode(SpoonacularRecipeDetail.self, from: data)
+                completion(detailedRecipe)
+            } catch {
+                print("DEBUG: Failed to decode recipe details: \(error.localizedDescription)")
+                completion(nil)
             }
         }.resume()
     }
