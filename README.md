@@ -2,11 +2,11 @@
 
 ## Table of Contents:
 - [About the Project](#about-the-project)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Getting Started](#getting-started)
-- [Usage](#usage)
-- [Project Structure](#project-structure)
+- 🚀[Features](#features)
+- 🛠[Tech Stack](#tech-stack)
+- 🔧[Getting Started](#getting-started)
+- 📖[Usage](#usage)
+- 📂[Project Structure](#project-structure)
 - [Future Improvements](#future-improvements)
 - [Contributors](#contributors)
 
@@ -16,48 +16,132 @@
 -The goal or motivation behind the project
 -total development time to current
 
-# Functional Requirements:
+# 🚀Features:
 ### 1. User Authentication:
-  - Code: [FridgeFriend/Core/Authentication](./FridgeFriend/Core/Authentication/)
-  - Uses FirebaseAuth for secure account creation, sign-in, and password reset.
+  #### Workflow (Registration): <br/>
+  1. User taps "Sign Up" on login view switching to registration view <br/>
+  2. User enters email, full name, password, and confirm password <br/>
+  3. User taps "Sign Up" returning to the login view <br/>
+  #### Workflow (Login): <br/>
+  1. User enters email and password and taps "Sign In" <br/>
+  2. User is brought to the homepage view<br/>
+  #### Related Files:<br/>
+  • Main View model for all user authentication - [FridgeFriend/Core/Authentication/ViewModel/AuthViewModel.swift](./FridgeFriend/Core/Authentication/ViewModel/AuthViewModel.swift) <br/>
+  • View folder for authentication - [FridgeFriend/Core/Authentication/View](./FridgeFriend/Core/Authentication/View)
 
 ### 2. User Password Reset:
-  - Code:
-  - What it does
+  #### Workflow: <br/>
+  1. User taps "Forgot Password" on login view switching to password reset view <br/>
+  2. User enters email address and presses confirm <br/>
+  3. The system displays a success message and sends the user an email to the email on file <br/>
+  4. User enters a new password, and it's updated through Firebase <br/>
+  #### Related Files:<br/>
+  • Main View model for all user authentication - [FridgeFriend/Core/Authentication/ViewModel/AuthViewModel.swift](./FridgeFriend/Core/Authentication/ViewModel/AuthViewModel.swift) <br/>
+  • View folder for authentication - [FridgeFriend/Core/Authentication/View/ResetPasswordView](./FridgeFriend/Core/Authentication/View/ResetPasswordView.swift)
 
 ### 3. Receipt Scanning:
-  - Code:
-  - What it does
+  #### Workflow:
+  1. User taps "Scan Receipt" in the main interface
+  2. Camera access is checked and requested if needed
+  3. User captures a photo of the receipt
+  4. OCR processes the image to detect text
+  5. Detected test is filtered to identify ingredients
+  6. User confirms which ingredients to add
+  7. Selected ingredients are added to inventory
+  
+  #### Related Files:<br/>
+  • Main Scanning Interface - [FridgeFriend/Core/Scanning/ScanReceiptView.swift](./FridgeFriend/Core/Scanning/ScanReceiptView.swift) <br/>
+  • Camera Implementation - [FridgeFriend/Core/Scanning/Camera](./FridgeFriend/Core/Scanning/Camera/) <br/>
+  • Text Recognition - [FridgeFriend/Core/Scanning/TextRecognition.swift](./FridgeFriend/Core/Scanning/TextRecognition.swift) | [FridgeFriend/Core/Scanning/ImageView.swift.swift](./FridgeFriend/Core/Scanning/ImageView.swift) <br/>
 
 ### 4. Manually Input Receipt:
-  - Code:
-  - What it does
+  #### Workflow: <br/>
+  1. User taps "Scan" tab, switching to scan view <br/>
+  2. User taps "Manual Input" switching to manual input view <br/>
+  3. User adds ingredients manually specify name, quantity, and expiration date <br/>
+  4. User confirms and taps "Add to Inventory" returning to main screen view <br/>
+  5. The system updates the inventory within the user's account in Firebase <br/>
+  #### Related Files:<br/>
+  • Manually Input Receipt Alternative - [FridgeFriend/Core/Scanning/ManualIngredientsInputView.swift](./FridgeFriend/Core/Scanning/ManualIngredientsInputView.swift)
 
 ### 5. Food Inventory Management:
-  - Code:
-  - What it does
+  #### Workflow (Add Item): <br/>
+  1. User taps "Add Item" when no items are in inventory or "+" when items are in inventory <br/>
+  2. The system displays form for an item <br/>
+  3. User enters name, quantity, expiration date <br/>
+  4. User taps "Add" creating an inventory item and storing in Firebase <br/>
+  #### Workflow (Update Item): <br/>
+  1. User taps on an existing item in inventory <br/>
+  2. The system displays update form <br/>
+  3. User can update/change name, quantity, expiration date <br/>
+  4. User taps "Update" updating selected item in Firebase <br/>
+  #### Workflow (Remove Item): <br/>
+  1. User holds down on an item and taps delete <br/>
+  2. User swipes left on an item and taps delete/trash <br/>
+  3. The system prompts the user asking if an item was "Wasted" or "Not Wasted" <br/>
+  4. User selects "Wasted" the item is archived in Firebase and removed from inventory <br/>
+  5. User taps "Not Wasted" item is removed from firebase/inventory <br/>
+  #### Related Files: <br/>
+  • Main Inventory Interface - [FridgeFriend/Core/Inventory/View/InventoryView.swift](./FridgeFriend/Core/Inventory/View/InventoryView.swift) <br/>
+  • Inventory Data Management - [FridgeFriend/Core/Inventory/ViewModel/InventoryViewModel.swift](./FridgeFriend/Core/Inventory/ViewModel/InventoryViewModel.swift) <br/>
+  • Item Input/Edit Interface - [FridgeFriend/Components/InventoryItemInputView.swift](./FridgeFriend/Components/InventoryItemInputView.swift) <br/>
+  • Item Display Components - [FridgeFriend/Components/InventoryItemView.swift](./FridgeFriend/Components/InventoryItemView.swift) <br/>
+  • Data Models - [FridgeFriend/Model/InventoryItem.swift](./FridgeFriend/Model/InventoryItem.swift)
 
 ### 6. Custom Recipe Saving:
-  - Code:
-  - What it does
+  #### Workflow: <br/>
+  1. User taps "+" in the recipes view under "Custom Recipes" tab<br/>
+  2. The system displays add recipe view <br/>
+  3. User enters recipe title, ingredients/quantities, and instructions <br/>
+  4. User taps "Save Recipe" updating with their profile through Firebase <br/>
+  #### Related Files: <br/>
+  • Viewing Recipes - [FridgeFriend/Core/Recipes/RecipeView.swift](./FridgeFriend/Core/Recipes/RecipeView.swift) <br/>
+  • Adding Recipe - [FridgeFriend/Core/Recipes/AddRecipeView.swift](./FridgeFriend/Core/Recipes/AddRecipeView.swift) <br/>
+  • Viewing Recipe Details - [FridgeFriend/Core/Recipes/RecipeDetailView.swift](./FridgeFriend/Core/Recipes/RecipeDetailView.swift) <br/>
+  • Supporting Files - [FridgeFriend/Core/Inventory/ViewModel/InventoryViewModel.swift](./FridgeFriend/Core/Inventory/ViewModel/InventoryViewModel.swift) <br/>
 
 ### 7. Recipe Suggestions:
-  - Code:
-  - What it does
+  #### Workflow: <br/>
+  1. User taps "Suggested Recipes" and taps desired recipe from a list of 20 recipes <br/>
+  2. The system displays recipe ingredients/quantities and images of recipe <br/>
+  #### Related Files: <br/>
+  • Main Recipe Interface - [FridgeFriend/Core/Recipes/RecipeView.swift](./FridgeFriend/Core/Recipes/RecipeView.swift) <br/>
+  • Recipe Creation - [FridgeFriend/Core/Recipes/AddRecipeView.swift](./FridgeFriend/Core/Recipes/AddRecipeView.swift) <br/>
+  • Recipe Model - [FridgeFriend/Core/Recipes/Recipe.swift](./FridgeFriend/Core/Recipes/Recipe.swift) <br/>
+  • Recipe Detail View - [FridgeFriend/Core/Recipes/RecipeDetailView.swift](./FridgeFriend/Core/Recipes/RecipeDetailView.swift) <br/>
+  • Recipe Service - [FridgeFriend/Core/Recipes/RecipeService.swift](./FridgeFriend/Core/Recipes/RecipeService.swift) <br/>
+  • Supporting Files - [FridgeFriend/Core/Inventory/ViewModel/InventoryViewModel.swift](./FridgeFriend/Core/Inventory/ViewModel/InventoryViewModel.swift) <br/>
 
 ### 8. Recipe Usage:
-  - Code:
-  - What it does
-
+  #### Workflow: <br/>
+  1. User taps "Check Ingredients" either with custom or suggested recipes<br/>
+  2. The system prompts the user to add missing ingredients, or all ingredients are in the inventory <br/>
+  3. User taps "Use Recipe" <br/>
+  4. The system updates the inventory by removing used items and updating with Firebase <br/>
+  #### Related Files: <br/>
+  • Using/Viewing Recipe | Checking Ingredients | Handling Missing Ingredients - [FridgeFriend/Core/Recipes/RecipeDetailView.swift](./FridgeFriend/Core/Recipes/RecipeDetailView.swift) | [FridgeFriend/Core/Inventory/ViewModel/InventoryViewModel.swift](./FridgeFriend/Core/Inventory/ViewModel/InventoryViewModel.swift) <br/>
+  
 ### 9. Expiration Date Notifications:
-  - Code:
-  - What it does
-
+  #### Workflow: <br/>
+  1. The system uses local notifications and sends them out every day at 9 am <br/>
+  2. system checks if an item is expiring soon, if it is, sends an expiring-soon notification <br/>
+  3. The system checks for expired items in inventory; if there are, it sends an expired item notification <br/>
+  #### Related Files: <br/>
+  • Notification Manager (Permissions Handling and Notification Scheduling/Handling) - [FridgeFriend/Services/NotificationManager.swift](./FridgeFriend/Services/NotificationManager.swift) <br/>
+  • Inventory Management (Expiration Tracking) - [FridgeFriend/Core/Inventory/ViewModel/InventoryViewModel.swift](./FridgeFriend/Core/Inventory/ViewModel/InventoryViewModel.swift) <br/>
 ### 10. Food Waste Tracking:
-  - Code:
-  - What it does
-
-# Tech Stack:
+  #### Workflow: <br/>
+  1. When an item is expired, the user needs to delete the item from inventory <br/>
+  2. The system confirms with the user that the item was wasted <br/>
+  3. The user taps "Yes" deleting the item in the inventory <br/>
+  4. The system archives the item with Firebase <br/>
+  5. The system adds the number of items to the Food Waste Tracker and the kind of item that was deleted <br/>
+  #### Related Files: <br/>
+  • Item Deletion/Archive - [FridgeFriend/Core/Inventory/View/InventoryView.swift](./FridgeFriend/Core/Inventory/View/InventoryView.swift) | [FridgeFriend/Components/FoodWasteConfirmationView.swift](./FridgeFriend/Components/FoodWasteConfirmationView.swift) <br/>
+  • Waste Recording - [FridgeFriend/Core/Inventory/ViewModel/InventoryViewModel.swift](./FridgeFriend/Core/Inventory/ViewModel/InventoryViewModel.swift) <br/>
+  • Waste Display - [FridgeFriend/Core/HomePage/HomeView.swift](./FridgeFriend/Core/HomePage/HomeView.swift) <br/>
+  • Data Management - [FridgeFriend/Core/HomePage/HomeViewModel.swift](./FridgeFriend/Core/HomePage/HomeViewModel.swift) <br/>
+# 🛠Tech Stack:
 ### Frameworks/libraries/tools used in the project:
   ##### 1. Core iOS Frameworks:
     •SwiftUI (Apple framework)
@@ -86,15 +170,15 @@
     •Storyboard (for launch screen)
     •Asset Catalog (managing app resources)
 
-# Getting Started:
+# 🔧Getting Started:
 -Instructions to set up project locally
 
-# Usage:
+# 📖Usage:
 How to run application
 -ex apple dev id 
 -firebase access
 
-# Project Structure:
+# 📂Project Structure:
 <pre><code>
   FridgeFriend/ 
   ├─App/
@@ -178,4 +262,4 @@ How to run application
     item expiring soon and or an expired item in inventory.
 
 # Contributors:
-
+James Kourkoutas | Colin Danforth | Denis Le | Timmy Tran
