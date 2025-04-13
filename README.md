@@ -11,10 +11,17 @@
 - 📖[Contributors](#contributors)
 
 # 💡About the Project:
--What the Project Does
 
--The goal or motivation behind the project
--total development time to current
+Fridge Friend is an iOS application designed to help users manage their food inventory, and get recipes suggestions to make use of the ingredients more efficiently. The project was developed in a team of 4 as a semester long project for a Software Engineering class. It focuses on creating a user-friendly user interface, while implementing features such as OCR scanning, recipe suggestions, and inventory management.
+
+## Key Goals:
+- Reduce food waste by tracking expiration dates
+- Help users find new recipes based on their available ingredients
+- Allow for easier tracking through receipt scanning or manually inputting
+
+## Development Time:
+- Current Version: 1.0
+- Development Time: 4 months
 
 # 🚀Features:
 ### 1. User Authentication: 🔑
