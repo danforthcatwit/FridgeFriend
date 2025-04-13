@@ -5,7 +5,6 @@
 - 🚀[Features](#features)
 - 🛠[Tech Stack](#tech-stack)
 - 🔧[Getting Started](#getting-started)
-- 📖[Usage](#usage)
 - 📂[Project Structure](#project-structure)
 - 🌟[Future Improvements](#future-improvements)
 - 📖[Contributors](#contributors)
