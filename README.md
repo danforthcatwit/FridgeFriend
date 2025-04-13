@@ -17,7 +17,7 @@
 -total development time to current
 
 # 🚀Features:
-### 1. User Authentication:
+### 1. User Authentication: 🔑
   #### Workflow (Registration): <br/>
   1. User taps "Sign Up" on login view switching to registration view <br/>
   2. User enters email, full name, password, and confirm password <br/>
@@ -29,7 +29,7 @@
   • Main View model for all user authentication - [FridgeFriend/Core/Authentication/ViewModel/AuthViewModel.swift](./FridgeFriend/Core/Authentication/ViewModel/AuthViewModel.swift) <br/>
   • View folder for authentication - [FridgeFriend/Core/Authentication/View](./FridgeFriend/Core/Authentication/View)
 
-### 2. User Password Reset:
+### 2. User Password Reset: 🔒
   #### Workflow: <br/>
   1. User taps "Forgot Password" on login view switching to password reset view <br/>
   2. User enters email address and presses confirm <br/>
@@ -39,7 +39,7 @@
   • Main View model for all user authentication - [FridgeFriend/Core/Authentication/ViewModel/AuthViewModel.swift](./FridgeFriend/Core/Authentication/ViewModel/AuthViewModel.swift) <br/>
   • View folder for authentication - [FridgeFriend/Core/Authentication/View/ResetPasswordView](./FridgeFriend/Core/Authentication/View/ResetPasswordView.swift)
 
-### 3. Receipt Scanning:
+### 3. Receipt Scanning: 📷
   #### Workflow:
   1. User taps "Scan Receipt" in the main interface
   2. Camera access is checked and requested if needed
@@ -54,7 +54,7 @@
   • Camera Implementation - [FridgeFriend/Core/Scanning/Camera](./FridgeFriend/Core/Scanning/Camera/) <br/>
   • Text Recognition - [FridgeFriend/Core/Scanning/TextRecognition.swift](./FridgeFriend/Core/Scanning/TextRecognition.swift) | [FridgeFriend/Core/Scanning/ImageView.swift.swift](./FridgeFriend/Core/Scanning/ImageView.swift) <br/>
 
-### 4. Manually Input Receipt:
+### 4. Manually Input Receipt: 🖊️
   #### Workflow: <br/>
   1. User taps "Scan" tab, switching to scan view <br/>
   2. User taps "Manual Input" switching to manual input view <br/>
@@ -64,7 +64,7 @@
   #### Related Files:<br/>
   • Manually Input Receipt Alternative - [FridgeFriend/Core/Scanning/ManualIngredientsInputView.swift](./FridgeFriend/Core/Scanning/ManualIngredientsInputView.swift)
 
-### 5. Food Inventory Management:
+### 5. Food Inventory Management: 👨‍💼
   #### Workflow (Add Item): <br/>
   1. User taps "Add Item" when no items are in inventory or "+" when items are in inventory <br/>
   2. The system displays form for an item <br/>
@@ -88,7 +88,7 @@
   • Item Display Components - [FridgeFriend/Components/InventoryItemView.swift](./FridgeFriend/Components/InventoryItemView.swift) <br/>
   • Data Models - [FridgeFriend/Model/InventoryItem.swift](./FridgeFriend/Model/InventoryItem.swift)
 
-### 6. Custom Recipe Saving:
+### 6. Custom Recipe Saving: ⚙️
   #### Workflow: <br/>
   1. User taps "+" in the recipes view under "Custom Recipes" tab<br/>
   2. The system displays add recipe view <br/>
@@ -100,7 +100,7 @@
   • Viewing Recipe Details - [FridgeFriend/Core/Recipes/RecipeDetailView.swift](./FridgeFriend/Core/Recipes/RecipeDetailView.swift) <br/>
   • Supporting Files - [FridgeFriend/Core/Inventory/ViewModel/InventoryViewModel.swift](./FridgeFriend/Core/Inventory/ViewModel/InventoryViewModel.swift) <br/>
 
-### 7. Recipe Suggestions:
+### 7. Recipe Suggestions: 📝
   #### Workflow: <br/>
   1. User taps "Suggested Recipes" and taps desired recipe from a list of 20 recipes <br/>
   2. The system displays recipe ingredients/quantities and images of recipe <br/>
@@ -112,7 +112,7 @@
   • Recipe Service - [FridgeFriend/Core/Recipes/RecipeService.swift](./FridgeFriend/Core/Recipes/RecipeService.swift) <br/>
   • Supporting Files - [FridgeFriend/Core/Inventory/ViewModel/InventoryViewModel.swift](./FridgeFriend/Core/Inventory/ViewModel/InventoryViewModel.swift) <br/>
 
-### 8. Recipe Usage:
+### 8. Recipe Usage: 🎛️
   #### Workflow: <br/>
   1. User taps "Check Ingredients" either with custom or suggested recipes<br/>
   2. The system prompts the user to add missing ingredients, or all ingredients are in the inventory <br/>
@@ -121,7 +121,7 @@
   #### Related Files: <br/>
   • Using/Viewing Recipe | Checking Ingredients | Handling Missing Ingredients - [FridgeFriend/Core/Recipes/RecipeDetailView.swift](./FridgeFriend/Core/Recipes/RecipeDetailView.swift) | [FridgeFriend/Core/Inventory/ViewModel/InventoryViewModel.swift](./FridgeFriend/Core/Inventory/ViewModel/InventoryViewModel.swift) <br/>
   
-### 9. Expiration Date Notifications:
+### 9. Expiration Date Notifications: ⏳
   #### Workflow: <br/>
   1. The system uses local notifications and sends them out every day at 9 am <br/>
   2. system checks if an item is expiring soon, if it is, sends an expiring-soon notification <br/>
@@ -129,7 +129,7 @@
   #### Related Files: <br/>
   • Notification Manager (Permissions Handling and Notification Scheduling/Handling) - [FridgeFriend/Services/NotificationManager.swift](./FridgeFriend/Services/NotificationManager.swift) <br/>
   • Inventory Management (Expiration Tracking) - [FridgeFriend/Core/Inventory/ViewModel/InventoryViewModel.swift](./FridgeFriend/Core/Inventory/ViewModel/InventoryViewModel.swift) <br/>
-### 10. Food Waste Tracking:
+### 10. Food Waste Tracking: 🗑️
   #### Workflow: <br/>
   1. When an item is expired, the user needs to delete the item from inventory <br/>
   2. The system confirms with the user that the item was wasted <br/>
