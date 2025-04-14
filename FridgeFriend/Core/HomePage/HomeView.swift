@@ -10,7 +10,8 @@ import Charts
 
 struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
-    @State private var selectedTab = 0
+    @Binding var selectedTab: Int
+    @Binding var isFromSuggestRecipes: Bool
     
     var body: some View {
         NavigationStack {
@@ -96,7 +97,10 @@ struct HomeView: View {
     
     // MARK: - Suggest Recipes Button
     private var suggestRecipesButton: some View {
-        NavigationLink(destination: RecipeView(initialTab: 1)) {
+        Button(action: {
+            isFromSuggestRecipes = true
+            selectedTab = 3 // Switch to Recipes tab
+        }) {
             HStack(spacing: 12) {
                 Image(systemName: "fork.knife.circle.fill")
                     .font(.title2)
@@ -305,5 +309,5 @@ struct HomeView: View {
 }
 
 #Preview {
-    HomeView()
+    HomeView(selectedTab: .constant(0), isFromSuggestRecipes: .constant(false))
 }

@@ -7,8 +7,7 @@
 
 import SwiftUI
 import Firebase
-
-
+import UserNotifications
 
 @main
 struct FridgeFriendApp: App {
@@ -16,6 +15,8 @@ struct FridgeFriendApp: App {
     
     init() {
         FirebaseApp.configure()
+        // Request notification permissions
+        NotificationManager.shared.requestAuthorization()
     }
    
     

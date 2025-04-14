@@ -21,7 +21,7 @@ struct InventoryItemView: View {
     
     var body: some View {
         HStack(spacing: 12) {
-            // Item Name (takes up more space)
+            // Item Name
             Text(itemName)
                 .font(.headline)
                 .foregroundColor(.primary)
@@ -66,31 +66,7 @@ struct InventoryItemView: View {
     }
 }
 
-// Preview provider for SwiftUI canvas
-struct InventoryItemView_Previews: PreviewProvider {
-    static var previews: some View {
-        VStack(spacing: 12) {
-            InventoryItemView(
-                itemName: "Apples",
-                quantity: 5,
-                expirationDate: Date().addingTimeInterval(86400 * 3) // 3 days from now
-            )
-            
-            InventoryItemView(
-                itemName: "Milk",
-                quantity: 1,
-                expirationDate: Date().addingTimeInterval(86400 * 10) // 10 days from now
-            )
-            
-            InventoryItemView(
-                itemName: "Very Long Product Name That Might Get Cut Off",
-                quantity: 12,
-                expirationDate: Date().addingTimeInterval(86400 * 2) // 2 days from now
-            )
-        }
-        .padding()
-        .previewLayout(.sizeThatFits)
-    }
-}
+
+
 
 

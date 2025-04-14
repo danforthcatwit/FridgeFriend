@@ -34,8 +34,8 @@ class NotificationManager {
         // Schedule for the next day at 9 AM
         let calendar = Calendar.current
         var components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: Date())
-        components.hour = 9
-        components.minute = 0
+        components.hour = 16
+        components.minute = 32
         
         // If it's past 9 AM, schedule for tomorrow
         if let today = calendar.date(from: components), today < Date() {

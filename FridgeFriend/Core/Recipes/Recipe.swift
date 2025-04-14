@@ -34,12 +34,12 @@ struct Recipe: Identifiable, Codable {
         
         // Add quantities for used ingredients
         for ingredient in spoonacularRecipe.usedIngredients {
-            quantities[ingredient.name] = ingredient.amount
+            quantities[ingredient.name] = ceil(ingredient.amount) // Round up to nearest whole number
         }
         
         // Add quantities for missed ingredients
         for ingredient in spoonacularRecipe.missedIngredients {
-            quantities[ingredient.name] = ingredient.amount
+            quantities[ingredient.name] = ceil(ingredient.amount) // Round up to nearest whole number
         }
         
         self.ingredientQuantities = quantities

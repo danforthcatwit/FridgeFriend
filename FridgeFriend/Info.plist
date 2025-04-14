@@ -11,5 +11,7 @@
 		<key>UILaunchScreen</key>
 		<string></string>
 	</dict>
+	<key>NSUserNotificationUsageDescription</key>
+	<string>We need to send you notifications about expiring items in your inventory.</string>
 </dict>
 </plist>
