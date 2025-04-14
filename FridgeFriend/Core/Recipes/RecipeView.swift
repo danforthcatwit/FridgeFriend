@@ -30,6 +30,9 @@ struct RecipeView: View {
                 }
                 .pickerStyle(SegmentedPickerStyle())
                 .padding()
+                .onAppear {
+                    selectedTab = initialTab
+                }
 
                 // Display content based on selected tab
                 if selectedTab == 0 {
