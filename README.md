@@ -222,7 +222,7 @@ Fridge Friend is an iOS application designed to help users manage their food inv
    - Select your target device (simulator or physical device)
    - Press ⌘R or click the Run button in Xcode
 
-**Note**:
+**Troubleshooting**:
 If recipes are not loading, the Spoonacular API key may have expired or hit a usage limit.
 
 1. Open the file: `Info.plist`
