@@ -37,7 +37,7 @@ class AuthViewModel: ObservableObject {
             throw error
         }
     }
-    //need to implement
+    //DONE
     func resetPassword(withEmail email: String) async throws -> Error? {
         do {
             // Firebase Auth method to send password reset email
@@ -77,7 +77,7 @@ class AuthViewModel: ObservableObject {
         }
     }
     
-    //TODO 
+    //DONE
     func deleteUser() {
         guard let user = Auth.auth().currentUser else { return }
         
@@ -89,14 +89,14 @@ class AuthViewModel: ObservableObject {
                 return
             }
             
-            // Then delete the user from Firebase Auth
+            //  Delete the user from Firebase Auth
             user.delete { error in
                 if let error = error {
                     print("DEBUG: Failed to delete user with error \(error.localizedDescription)")
                     return
                 }
                 
-                // Finally, sign out and clear local state
+                // sign out and clear local state
                 self.signOut()
             }
         }

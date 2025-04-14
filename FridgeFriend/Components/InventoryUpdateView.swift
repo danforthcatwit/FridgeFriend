@@ -6,6 +6,7 @@ struct InventoryUpdateView: View {
     @State private var itemName: String
     @State private var quantity: Int
     @State private var expirationDate: Date
+    @State private var isVisible = true // Add state for animation
     
     //initializer handles editing existing items
     init(viewModel: InventoryViewModel, itemToEdit: InventoryItem? = nil){
@@ -27,8 +28,14 @@ struct InventoryUpdateView: View {
                     .font(.headline)
                 Spacer()
                 Button(action: {
-                    //close button functionality for edit
-                    viewModel.showingEditForm = false
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        isVisible = false
+                        // Small delay to allow animation to complete
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            viewModel.showingEditForm = false
+                            viewModel.itemToEdit = nil
+                        }
+                    }
                 }) {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundColor(.secondary)
@@ -59,12 +66,16 @@ struct InventoryUpdateView: View {
                         quantity: quantity,
                         expirationDate: expirationDate
                     )
-                    viewModel.updateItem(updatedItem)
-                    // Reset fields and close form
-                    viewModel.showingEditForm = false
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        isVisible = false
+                        // Small delay to allow animation to complete
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            viewModel.updateItem(updatedItem)
+                            viewModel.itemToEdit = nil
+                        }
+                    }
                 }
             }) {
-                //dynamic button 1 add, 2 edit
                 Text("Update Item")
                     .frame(maxWidth: .infinity)
                     .padding()
@@ -79,5 +90,8 @@ struct InventoryUpdateView: View {
         .cornerRadius(12)
         .padding(.horizontal)
         .padding(.top, 8)
+        .opacity(isVisible ? 1 : 0)
+        .scaleEffect(isVisible ? 1 : 0.95)
+        .animation(.easeIn(duration: 0.3), value: isVisible)
     }
 }

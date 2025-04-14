@@ -17,6 +17,7 @@ class InventoryViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var showingAddForm = false
     @Published var showingEditForm = false
+    @Published var itemToEdit: InventoryItem? = nil
     @Published var outOfStockIngredients: [(name: String, required: Int, available: Int)] = []
     @Published var suggestedRecipes: [Recipe] = []
     @Published var showingMissingIngredientsAlert = false
@@ -713,7 +714,7 @@ class InventoryViewModel: ObservableObject {
                     
                     // Wait for all API calls to complete
                     group.notify(queue: .main) {
-                        // Sort recipes by usedIngredientCount (descending) to show recipes that use more of our ingredients first
+                        // Sort recipes by usedIngredientCount (descending) to show recipes that use more of the ingredients first
                         uniqueRecipes.sort { ($0.usedIngredientCount ?? 0) > ($1.usedIngredientCount ?? 0) }
                         
                         self?.suggestedRecipes = uniqueRecipes
@@ -774,8 +775,8 @@ class InventoryViewModel: ObservableObject {
             }
         }.resume()
     }
-
-    /// Updates the quantity of an ingredient without checking availability
+    
+    // Updates the quantity of ingredients from recipe ingredient usage
     func updateIngredientQuantity(_ ingredientEntry: String) {
         guard let userID = userID else {
             errorMessage = "User ID not available"

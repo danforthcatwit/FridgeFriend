@@ -80,9 +80,22 @@ struct RegistrationView: View {
                             try await viewModel.createUser(withEmail: email,
                                                            password: password,
                                                            name: name)
-                            errorMessage = nil
+                            
+                            
                         } catch {
-                            errorMessage = "Email is already in use. Please try again."
+                            if (password.count <= 5) && (email.contains("@")) {
+                                errorMessage = "Password must be at least 6 characters long."
+                            }
+                            else if (!email.contains("@")) && (password.count > 5) {
+                                errorMessage = "Please enter a valid email."
+                            }
+                            else if (!email.contains("@")) && (password.count <= 5){
+                                errorMessage = "Invalid Username or Password"
+                            }
+                            else {
+                                errorMessage = "The email address is already in use by another account."
+                            }
+                           
                         }
                    
                     }

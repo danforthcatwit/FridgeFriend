@@ -2,7 +2,6 @@ import SwiftUI
 
 struct InventoryView: View {
     @StateObject var viewModel = InventoryViewModel()
-    @State private var itemToEdit: InventoryItem? = nil
     @State private var isPressed: Bool = false
     @State private var itemToDelete: InventoryItem? = nil
     @State private var showingDeleteConfirmation = false
@@ -47,8 +46,6 @@ struct InventoryView: View {
                                         quantity: item.quantity,
                                         expirationDate: item.expirationDate
                                     )
-                                               
-                                    
                                     .listRowSeparator(.hidden)
                                     .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                                     .contextMenu {
@@ -70,7 +67,7 @@ struct InventoryView: View {
                                     }
                                     
                                     // Conditionally show update view for the current item
-                                    if itemToEdit?.id == item.id {
+                                    if viewModel.itemToEdit?.id == item.id {
                                         InventoryUpdateView(viewModel: viewModel, itemToEdit: item)
                                             .transition(.move(edge: .bottom).combined(with: .opacity))
                                     }
@@ -94,15 +91,15 @@ struct InventoryView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
                         withAnimation {
-                            if itemToEdit != nil {
-                                itemToEdit = nil
+                            if viewModel.itemToEdit != nil {
+                                viewModel.itemToEdit = nil
                                 viewModel.showingEditForm = false
                             } else {
                                 viewModel.showingAddForm.toggle()
                             }
                         }
                     }) {
-                        if itemToEdit != nil {
+                        if viewModel.itemToEdit != nil {
                             Label("Cancel Edit", systemImage: "xmark")
                         } else {
                             Label(
@@ -151,16 +148,14 @@ struct InventoryView: View {
             }
         }
     }
-
     
     //Helper function to start editing mode
     private func startEditing(_ item: InventoryItem) {
         withAnimation {
             // If tapping the same item, set itemToEdit to nil
-            itemToEdit = itemToEdit?.id == item.id ? nil : item
+            viewModel.itemToEdit = viewModel.itemToEdit?.id == item.id ? nil : item
             // Exit add mode if active
             viewModel.showingAddForm = false
-            viewModel.showingEditForm = true
         }
     }
     
