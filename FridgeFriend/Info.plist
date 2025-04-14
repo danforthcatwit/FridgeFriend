@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSUserNotificationUsageDescription</key>
+	<string>We need to send you notifications about expiring items in your inventory.</string>
 	<key>SpoonacularAPIKey</key>
 	<string>95db128f419d44df8aacbd9c64636e0c</string>
 	<key>UILaunchScreen</key>
@@ -11,7 +13,5 @@
 		<key>UILaunchScreen</key>
 		<string></string>
 	</dict>
-	<key>NSUserNotificationUsageDescription</key>
-	<string>We need to send you notifications about expiring items in your inventory.</string>
 </dict>
 </plist>
