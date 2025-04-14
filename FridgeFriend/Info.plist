@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>SpoonacularAPIKey</key>
-	<string>22756f6781d44efa9db26314cef9ee68</string>
+	<string>95db128f419d44df8aacbd9c64636e0c</string>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIImageName</key>
@@ -11,5 +11,7 @@
 		<key>UILaunchScreen</key>
 		<string></string>
 	</dict>
+	<key>NSUserNotificationUsageDescription</key>
+	<string>We need to send you notifications about expiring items in your inventory.</string>
 </dict>
 </plist>

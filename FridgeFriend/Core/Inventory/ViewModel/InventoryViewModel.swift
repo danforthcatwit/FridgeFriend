@@ -193,6 +193,18 @@ class InventoryViewModel: ObservableObject {
                             // Update the item in Firestore
                             try inventoryRef.document(matchingDocument.documentID).setData(from: existingItem)
                             self.showingAddForm = false
+                            
+                            // Check if we need to schedule notifications for the updated item
+                            let calendar = Calendar.current
+                            let today = calendar.startOfDay(for: Date())
+                            let expirationDate = calendar.startOfDay(for: existingItem.expirationDate)
+                            let daysUntilExpiration = calendar.dateComponents([.day], from: today, to: expirationDate).day ?? 0
+                            
+                            if daysUntilExpiration >= 0 && daysUntilExpiration <= 2 {
+                                NotificationManager.shared.scheduleExpiringSoonNotification(for: [existingItem])
+                            } else if daysUntilExpiration < 0 {
+                                NotificationManager.shared.scheduleExpiredNotification(for: [existingItem])
+                            }
                         } catch {
                             self.errorMessage = "Failed to update existing item: \(error.localizedDescription)"
                         }
@@ -201,6 +213,18 @@ class InventoryViewModel: ObservableObject {
                         do {
                             _ = try inventoryRef.addDocument(from: lowercaseItem)
                             self.showingAddForm = false
+                            
+                            // Check if we need to schedule notifications for the new item
+                            let calendar = Calendar.current
+                            let today = calendar.startOfDay(for: Date())
+                            let expirationDate = calendar.startOfDay(for: lowercaseItem.expirationDate)
+                            let daysUntilExpiration = calendar.dateComponents([.day], from: today, to: expirationDate).day ?? 0
+                            
+                            if daysUntilExpiration >= 0 && daysUntilExpiration <= 2 {
+                                NotificationManager.shared.scheduleExpiringSoonNotification(for: [lowercaseItem])
+                            } else if daysUntilExpiration < 0 {
+                                NotificationManager.shared.scheduleExpiredNotification(for: [lowercaseItem])
+                            }
                         } catch {
                             self.errorMessage = "Failed to add item: \(error.localizedDescription)"
                         }
