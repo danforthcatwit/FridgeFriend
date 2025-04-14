@@ -68,7 +68,7 @@ Fridge Friend is an iOS application designed to help users manage their food inv
   4. User confirms and taps "Add to Inventory" returning to main screen view <br/>
   5. The system updates the inventory within the user's account in Firebase <br/>
   #### Related Files:<br/>
-  • Manually Input Receipt Alternative - [FridgeFriend/Core/Scanning/ManualIngredientsInputView.swift](./FridgeFriend/Core/Scanning/ManualIngredientsInputView.swift)
+  • Manually Input Receipt Alternative - [FridgeFriend/Core/Scanning/ManualIngredientInputView.swift](./FridgeFriend/Core/Scanning/ManualIngredientInputView.swift)
 
 ### 5. Food Inventory Management: 👨‍💼
   #### Workflow (Add Item): <br/>
