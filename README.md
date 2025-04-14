@@ -186,10 +186,22 @@ Fridge Friend is an iOS application designed to help users manage their food inv
 ## Installation Steps
 
 1. **Clone the Repository**
-   ```bash
-   git clone https://github.com/danforthcatwit/FridgeFriend.git
-   cd FridgeFriend
-   ```
+  Clone through HTTPS or SSH:
+
+  **HTTPS** (requires GitHub username and [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic)):
+  ```bash
+  git clone https://github.com/danforthcatwit/FridgeFriend.git
+  ```
+
+  **SSH** (requires [SSH setup](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)):
+  ```
+  git clone git@github.com:danforthcatwit/FridgeFriend.git
+  ```
+
+  Then navigate to project:
+  ```bash
+  cd FridgeFriend
+  ```
 
 2. **Open the Project**
    - Open `FridgeFriend.xcodeproj` in Xcode
@@ -199,9 +211,25 @@ Fridge Friend is an iOS application designed to help users manage their food inv
    - The project is already configured with necessary API keys in the project
    - No additional setup is required for Firebase or other services
 
-4. **Build and Run**
+  **Note**:
+  Make sure to update the Team and Bundle identifier if there are any code signing issues:
+  1. Go to Project Settings in Xcode, shown at the very top of the project structure
+  2. Click "Signing & Capabilities" tab
+  3. Change the Team to personal Apple Developer account
+  4. Update the Bundle identifier to "com.FridgeFriend" if needed
+
+5. **Build and Run**
    - Select your target device (simulator or physical device)
    - Press ⌘R or click the Run button in Xcode
+
+**Note**:
+If recipes are not loading, the Spoonacular API key may have expired or hit a usage limit.
+
+1. Open the file: `Info.plist`
+2. Replace SpoonacularAPIKey with valid API key from Spoonacular account
+
+Request a new key here:
+https://spoonacular.com/food-api/console#Dashboard
 
 ## Development Notes
 - The project uses SwiftUI
@@ -216,7 +244,7 @@ Fridge Friend is an iOS application designed to help users manage their food inv
   ├─Components/
   |  ├─FoodWasteConfirmationView.swift
   |  ├─InputView.swift
-  |  ├─InventoryItemInputView.swift
+  |  ├─InventoryItemInputView.swift  
   |  ├─InventoryItemView.swift
   |  ├─InventoryUpdateView.swift
   |  ├─SettingRowView.swift
