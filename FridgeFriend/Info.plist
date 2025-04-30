@@ -5,7 +5,7 @@
 	<key>NSUserNotificationUsageDescription</key>
 	<string>We need to send you notifications about expiring items in your inventory.</string>
 	<key>SpoonacularAPIKey</key>
-	<string>95db128f419d44df8aacbd9c64636e0c</string>
+	<string>REPLACE WITH API KEY</string>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIImageName</key>
