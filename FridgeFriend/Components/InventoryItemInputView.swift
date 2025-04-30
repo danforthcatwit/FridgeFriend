@@ -21,8 +21,8 @@ struct InventoryItemInputView: View {
     
     //FatSecret Service
     private let fatSecretService = FatSecretService(
-        apiKey:"5c0ad605b4bd4639ac767946a121332a",
-        apiSecret: "68a192dc5d6b472585692e37d109fc63",
+        apiKey:"Add your own",
+        apiSecret: "add your own",
         baseURL: "https://platform.fatsecret.com/rest",
         oauthURL: "https://oauth.fatsecret.com/connect/token"
     )
